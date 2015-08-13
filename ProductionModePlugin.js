@@ -7,6 +7,7 @@ var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
 var path = require("path");
 var SkipAMDOfUMDPlugin = require("skip-amd-webpack-plugin");
+var util = require("./util");
 
 /**
  * Production Mode:
@@ -16,19 +17,24 @@ var SkipAMDOfUMDPlugin = require("skip-amd-webpack-plugin");
  */
 function ProductionModePlugin(attributes) {
   this.i18nDataFile = path.resolve("./.globalize-prod-i18n-data.js");
-  this.defaultLocale = attributes.defaultLocale;
+  this.developmentLocale = attributes.developmentLocale;
   this.cldr = attributes.cldr || function(locale) {
     return cldrData.entireSupplemental().concat(cldrData.entireMainFor(locale));
   };
+  this.messages = attributes.messages && attributes.supportedLocales.reduce(function(sum, locale) {
+    sum[locale] = util.readMessages(attributes.messages, locale); 
+    return sum;
+  }, {});
 }
 
 ProductionModePlugin.prototype.apply = function(compiler) {
   var cache = {
     i18nDataContent: {}
   };
-  var defaultLocale = this.defaultLocale;
+  var developmentLocale = this.developmentLocale;
   var extracts = [];
   var i18nDataFile = this.i18nDataFile;
+  var messages = this.messages;
   //var cldr = this.cldr;
 
   function injectSetDefaultLocale(bundle, locale) {
@@ -42,6 +48,9 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         defaultLocale: locale,
         extracts: extracts
       };
+      if (messages[locale]) {
+        attributes.messages = messages[locale];
+      }
       compiler.applyPlugins("globalize-before-generate-bundle", locale, attributes);
       cache.i18nDataContent[locale] = injectSetDefaultLocale(
         globalizeCompiler.compileExtracts(attributes),
@@ -71,15 +80,15 @@ ProductionModePlugin.prototype.apply = function(compiler) {
 
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom precompiled formatters/parsers, which in turn
-  // requires Globalize, loads CLDR, set the default locale and then exports the
+  // requires Globalize, set the default locale and then exports the
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
     if(param.isString() && param.string === "globalize" &&
-          !(/(^|\/)globalize($|\/)/).test(this.state.current.request) &&
+          !util.isGlobalizeModule(this.state.current.request) &&
           !(new RegExp(i18nDataFile)).test(this.state.current.request)) {
       var dep;
 
-      fs.writeFileSync(i18nDataFile, i18nDataContent(defaultLocale));
+      fs.writeFileSync(i18nDataFile, i18nDataContent(developmentLocale));
       dep = new CommonJsRequireDependency(i18nDataFile, param.range);
       dep.loc = expr.loc;
       dep.optional = !!this.scope.inTry;
@@ -118,6 +127,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       /*
       function definesGlobalize(chunk) {
         return chunk.modules.some(function(module) {
+          // TODO: Update condition for isGlobalizeModule(...).
           if( /(^|\/)globalize($|\/)/.test(module.resource)) {
             console.log(module.resource);
           }

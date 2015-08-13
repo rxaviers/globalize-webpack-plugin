@@ -3,22 +3,25 @@ var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequir
 var fs = require("fs");
 var InCommonPlugin = require("./InCommonPlugin");
 var path = require("path");
- 
+var util = require("./util");
+
 /**
  * Development Mode:
  * - Automatically loads CLDR data (i.e., injects `Globalize.load(<necessary CLDR data>)`).
  * - Automatically define default locale (i.e., injects `Globalize.locale(<defaultLocale>)`).
  */
 function DevelopmentModePlugin(attributes) {
-  var CLDRData, i18nDataTemplate;
+  var cldr, i18nDataTemplate, messages;
 
-  CLDRData = attributes.CLDRData || JSON.stringify(cldrData.entireSupplemental().concat(cldrData.entireMainFor(attributes.defaultLocale)));
+  cldr = attributes.cldr || cldrData.entireSupplemental().concat(cldrData.entireMainFor(attributes.developmentLocale));
+  messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
 
   i18nDataTemplate = [
     "var Globalize = require(\"globalize\");",
     "",
-    "Globalize.load(" + CLDRData + ");",
-    "Globalize.locale(" + JSON.stringify(attributes.defaultLocale) + ")",
+    "Globalize.load(" + JSON.stringify(cldr) + ");",
+    messages ?  "Globalize.loadMessages(" + JSON.stringify(messages) + ");": "",
+    "Globalize.locale(" + JSON.stringify(attributes.developmentLocale) + ");",
     "",
     "module.exports = Globalize;"
   ].join("\n");
@@ -38,7 +41,7 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
     if(param.isString() && param.string === "globalize" &&
-          !(/(^|\/)globalize($|\/)/).test(this.state.current.request) &&
+          !util.isGlobalizeModule(this.state.current.request) &&
           !(new RegExp(i18nData)).test(this.state.current.request)) {
       var dep;
 
