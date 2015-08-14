@@ -6,8 +6,71 @@ var InCommonPlugin = require("./InCommonPlugin");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
 var path = require("path");
-var SkipAMDOfUMDPlugin = require("skip-amd-webpack-plugin");
+var SkipAMDPlugin = require("skip-amd-webpack-plugin");
 var util = require("./util");
+
+function GlobalizeCompilerHelper(attributes) {
+  InCommonPlugin.apply(this, arguments);
+
+  this.asts = {};
+  this.extracts = {};
+  this.modules = {};
+
+  this.compiler = attributes.compiler;
+  this.developmentLocale = attributes.developmentLocale;
+  this.messages = attributes.messages;
+}
+
+GlobalizeCompilerHelper.prototype.setAst = function(request, ast) {
+  this.asts[request] = ast;
+};
+
+GlobalizeCompilerHelper.prototype.getExtract = function(request) {
+  var ast;
+  if(!this.extracts[request]) {
+    ast = this.asts[request];
+    this.extracts[request] = globalizeCompiler.extract(ast);
+  }
+  return this.extracts[request];
+};
+
+GlobalizeCompilerHelper.prototype.createModule = function(request) {
+  var filepath = this.getModuleFilepath(request);
+  this.modules[filepath] = true;
+
+  fs.writeFileSync(filepath, this.compile(request));
+
+  return filepath;
+};
+
+GlobalizeCompilerHelper.prototype.getModuleFilepath = function(request) {
+  return path.join(this.tmpdir, request.replace(/\//g, "-"));
+};
+
+GlobalizeCompilerHelper.prototype.compile = function(request) {
+  var locale = this.developmentLocale;
+  var messages = this.messages;
+
+  var attributes = {
+    defaultLocale: locale,
+    extracts: this.getExtract(request)
+  };
+
+  if (messages[locale]) {
+    attributes.messages = messages[locale];
+  }
+
+  this.compiler.applyPlugins("globalize-before-generate-bundle", locale, attributes);
+
+  return globalizeCompiler.compileExtracts(attributes)
+
+    // Inject set defaultLocale.
+    .replace(/(return Globalize;)/, "Globalize.locale(\"" + locale + "\"); $1");
+};
+
+GlobalizeCompilerHelper.prototype.isCompiledDataModule = function(request) {
+  return this.modules[request];
+};
 
 /**
  * Production Mode:
@@ -16,49 +79,29 @@ var util = require("./util");
  *   them into respective XXXX.
  */
 function ProductionModePlugin(attributes) {
-  this.i18nDataFile = path.resolve("./.globalize-prod-i18n-data.js");
-  this.developmentLocale = attributes.developmentLocale;
   this.cldr = attributes.cldr || function(locale) {
     return cldrData.entireSupplemental().concat(cldrData.entireMainFor(locale));
   };
+  this.developmentLocale = attributes.developmentLocale;
   this.messages = attributes.messages && attributes.supportedLocales.reduce(function(sum, locale) {
     sum[locale] = util.readMessages(attributes.messages, locale); 
     return sum;
   }, {});
+  this.supportedLocales = attributes.supportedLocales;
+  this.output = attributes.output;
 }
 
 ProductionModePlugin.prototype.apply = function(compiler) {
-  var cache = {
-    i18nDataContent: {}
-  };
-  var developmentLocale = this.developmentLocale;
-  var extracts = [];
-  var i18nDataFile = this.i18nDataFile;
-  var messages = this.messages;
   //var cldr = this.cldr;
+  var developmentLocale = this.developmentLocale;
+  var messages = this.messages;
+  var output = this.output || "i18n-[locale].js";
 
-  function injectSetDefaultLocale(bundle, locale) {
-    return bundle.replace(/(return Globalize;)/, "Globalize.locale(\"" + locale + "\"); $1");
-  }
-
-  function i18nDataContent(locale) {
-    var attributes;
-    if (!cache.i18nDataContent[locale]) {
-      attributes = {
-        defaultLocale: locale,
-        extracts: extracts
-      };
-      if (messages[locale]) {
-        attributes.messages = messages[locale];
-      }
-      compiler.applyPlugins("globalize-before-generate-bundle", locale, attributes);
-      cache.i18nDataContent[locale] = injectSetDefaultLocale(
-        globalizeCompiler.compileExtracts(attributes),
-        locale
-      );
-    }
-    return cache.i18nDataContent[locale];
-  }
+  var globalizeCompilerHelper = new GlobalizeCompilerHelper({
+    compiler: compiler,
+    developmentLocale: developmentLocale,
+    messages: messages
+  });
 
   compiler.apply(
     new InCommonPlugin(),
@@ -67,15 +110,12 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
 
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    new SkipAMDOfUMDPlugin(/(^|\/)globalize-runtime($|\/)/),
-
-    // Skip AMD part of the compiled i18n-data UMD wrapper.
-    new SkipAMDOfUMDPlugin(new RegExp(i18nDataFile))
+    new SkipAMDPlugin(/(^|\/)globalize-runtime($|\/)/)
   );
 
   // Statically extract Globalize formatters and parsers.
   compiler.parser.plugin("program", function(ast) {
-    extracts.push(globalizeCompiler.extract(ast));
+    globalizeCompilerHelper.setAst(this.state.current.request, ast);
   });
 
   // "Intercepts" all `require("globalize")` by transforming them into a
@@ -83,13 +123,21 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // requires Globalize, set the default locale and then exports the
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
+    var request = this.state.current.request;
     if(param.isString() && param.string === "globalize" &&
-          !util.isGlobalizeModule(this.state.current.request) &&
-          !(new RegExp(i18nDataFile)).test(this.state.current.request)) {
+          !util.isGlobalizeModule(request) &&
+          !(globalizeCompilerHelper.isCompiledDataModule(request))) {
+          //!(new RegExp(i18nDataFile)).test(request)/*FIXME*/) {
       var dep;
 
-      fs.writeFileSync(i18nDataFile, i18nDataContent(developmentLocale));
-      dep = new CommonJsRequireDependency(i18nDataFile, param.range);
+      var compiledDataFilepath = globalizeCompilerHelper.createModule(request);
+
+      // Skip AMD part of the compiled i18n-data UMD wrapper.
+      compiler.apply(
+        new SkipAMDPlugin(new RegExp(compiledDataFilepath))
+      );
+
+      dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
       dep.loc = expr.loc;
       dep.optional = !!this.scope.inTry;
       this.state.current.addDependency(dep);
@@ -101,25 +149,26 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // i18n-data chunk
   // - Create i18n-data chunk.
   compiler.plugin("entry-option", function(context) {
-    compiler.apply(new MultiEntryPlugin(context, [], "i18n-data"));
+    compiler.apply(new MultiEntryPlugin(context, [], "globalize-compiled-data"));
   });
 
   // - Place i18nDataFile module into i18n-data chunk.
   compiler.plugin("this-compilation", function(compilation) {
     compilation.plugin("after-optimize-chunks", function(chunks) {
-      var i18nDataChunk = chunks.filter(function(chunk) {
-        return chunk.name === "i18n-data";
+      var CompiledDataDataChunk = chunks.filter(function(chunk) {
+        return chunk.name === "globalize-compiled-data";
       })[0];
       chunks.forEach(function(chunk) {
         chunk.modules.forEach(function(module) {
-          if ((new RegExp(i18nDataFile)).test(module.request)) {
+          if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
+          // FIXME if ((new RegExp(i18nDataFile)).test(module.request)) {
             module.removeChunk(chunk);
-            i18nDataChunk.addModule(module);
-            module.addChunk(i18nDataChunk);
+            CompiledDataDataChunk.addModule(module);
+            module.addChunk(CompiledDataDataChunk);
           }
         });
       });
-      i18nDataChunk.filenameTemplate = "app-en.[hash].js";
+      CompiledDataDataChunk.filenameTemplate = output.replace("[locale]", developmentLocale);
     });
 
     compilation.plugin("optimize-chunk-order", function(chunks) {
@@ -136,7 +185,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       }
       function definesI18nData(chunk) {
         return chunk.modules.some(function(module) {
-          return (new RegExp(i18nDataFile)).test(module.resource);
+          return globalizeCompilerHelper.isCompiledDataModule(module.request);
         });
       }
       console.log("boo");
@@ -153,7 +202,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         return bValue - aValue;
       });
       */
-      var sortOrder = ["i18n-data", "vendor"];
+      var sortOrder = ["globalize-compiled-data", "vendor"];
       chunks.sort(function(a, b) {
         return sortOrder.indexOf(a.name) - sortOrder.indexOf(b.name);
       });

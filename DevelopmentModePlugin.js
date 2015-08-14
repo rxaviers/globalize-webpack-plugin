@@ -13,6 +13,8 @@ var util = require("./util");
 function DevelopmentModePlugin(attributes) {
   var cldr, i18nDataTemplate, messages;
 
+  InCommonPlugin.apply(this, arguments);
+
   cldr = attributes.cldr || cldrData.entireSupplemental().concat(cldrData.entireMainFor(attributes.developmentLocale));
   messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
 
@@ -26,7 +28,7 @@ function DevelopmentModePlugin(attributes) {
     "module.exports = Globalize;"
   ].join("\n");
 
-  this.i18nData = path.resolve("./.globalize-dev-i18n-data.js");
+  this.i18nData = path.join(this.tmpdir, "dev-i18n-data.js");
   fs.writeFileSync(this.i18nData, i18nDataTemplate);
 }
 
