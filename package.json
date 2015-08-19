@@ -1,10 +1,10 @@
 {
   "name": "globalize-webpack-plugin",
-  "version": "0.0.1-pre",
+  "version": "0.0.1",
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
-    "test": "npm test"
+    "test": "jshint *.js"
   },
   "repository": {
     "type": "git",
@@ -32,8 +32,5 @@
   },
   "devDependencies": {
     "jshint": "2.6.x"
-  },
-  "scripts": {
-    "test": "jshint *.js"
   }
 }
