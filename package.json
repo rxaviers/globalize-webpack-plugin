@@ -23,7 +23,7 @@
   "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
   "dependencies": {
     "globalize-compiler": "git://github.com/jquery-support/globalize-compiler#b0.0.1",
-    "skip-amd-of-umd-webpack-plugin": "git://github.com/rxaviers/skip-amd-webpack-plugin#b0.0.1"
+    "skip-amd-webpack-plugin": "0.0.x"
   },
   "peerDependencies": {
     "cldr-data": ">=25",
