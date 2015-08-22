@@ -5,6 +5,8 @@ var InCommonPlugin = require("./InCommonPlugin");
 var path = require("path");
 var util = require("./util");
 
+var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames"];
+
 /**
  * Development Mode:
  * - Automatically loads CLDR data (i.e., injects `Globalize.load(<necessary CLDR data>)`).
@@ -15,7 +17,9 @@ function DevelopmentModePlugin(attributes) {
 
   InCommonPlugin.apply(this, arguments);
 
-  cldr = attributes.cldr || cldrData.entireSupplemental().concat(cldrData.entireMainFor(attributes.developmentLocale));
+  cldr = attributes.cldr || cldrData.entireSupplemental().concat(mainFiles.map(function(mainFile) {
+    return cldrData(path.join("main", attributes.developmentLocale, mainFile));
+  }));
   messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
 
   i18nDataTemplate = [
