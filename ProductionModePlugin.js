@@ -1,8 +1,6 @@
-var cldrData = require("cldr-data");
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
 var ConcatSource = require("webpack/lib/ConcatSource");
 var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
-var InCommonPlugin = require("./InCommonPlugin");
 var ModuleFilenameHelpers = require("webpack/lib/ModuleFilenameHelpers");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
@@ -16,9 +14,7 @@ var util = require("./util");
  *   them into globalize-compiled-data chunks.
  */
 function ProductionModePlugin(attributes) {
-  this.cldr = attributes.cldr || function(locale) {
-    return cldrData.entireSupplemental().concat(cldrData.entireMainFor(locale));
-  };
+  this.cldr = attributes.cldr || util.cldr;
   this.developmentLocale = attributes.developmentLocale;
   this.messages = attributes.messages && attributes.supportedLocales.reduce(function(sum, locale) {
     sum[locale] = util.readMessages(attributes.messages, locale); 
@@ -26,17 +22,18 @@ function ProductionModePlugin(attributes) {
   }, {});
   this.supportedLocales = attributes.supportedLocales;
   this.output = attributes.output;
-  InCommonPlugin.apply(this, arguments);
+  this.tmpdir = util.tmpdir();
 }
 
 ProductionModePlugin.prototype.apply = function(compiler) {
-  //var cldr = this.cldr;
+  var cldr = this.cldr;
   var developmentLocale = this.developmentLocale;
   var messages = this.messages;
   var supportedLocales = this.supportedLocales;
   var output = this.output || "i18n-[locale].js";
 
   var globalizeCompilerHelper = new GlobalizeCompilerHelper({
+    cldr: cldr,
     developmentLocale: developmentLocale,
     messages: messages,
     tmpdir: this.tmpdir,
@@ -44,8 +41,8 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   });
 
   compiler.apply(
-    // Globalize Plugin dev and prod common things.
-    new InCommonPlugin(),
+    // Skip AMD part of Globalize Runtime UMD wrapper.
+    new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
 
     // Replaces `require("globalize")` with `require("globalize/dist/globalize-runtime")`.
     new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
@@ -103,17 +100,20 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // Place the Globalize compiled data modules into the globalize-compiled-data
   // chunks.
   //
-  // Note that all globalize-compiled-data chunks will equally include all
-  // precompiled modules. Although, at this point they have all been compiled
-  // for the developmentLocale. This will get fixed in the subsquent step.
+  // Note that, at this point, all compiled data have been compiled for
+  // developmentLocale. All globalize-compiled-data chunks will equally include all
+  // precompiled modules for the developmentLocale instead of their respective
+  // locales. This will get fixed in the subsquent step.
   compiler.plugin("this-compilation", function(compilation) {
     compilation.plugin("after-optimize-chunks", function(chunks) {
+      var hasAnyModuleBeenIncluded;
       var compiledDataDataChunks = chunks.filter(function(chunk) {
         return /globalize-compiled-data/.test(chunk.name);
       });
       chunks.forEach(function(chunk) {
         chunk.modules.forEach(function(module) {
           if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
+            hasAnyModuleBeenIncluded = true;
             module.removeChunk(chunk);
             compiledDataDataChunks.forEach(function(compiledDataDataChunk) {
               compiledDataDataChunk.addModule(module);
@@ -126,6 +126,9 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.filenameTemplate = output.replace("[locale]", locale);
       });
+      if(!hasAnyModuleBeenIncluded) {
+        console.warn("No Globalize compiled data module found");
+      }
     });
 
     // Have each globalize-compiled-data chunks to include precompiled data for
@@ -195,11 +198,12 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       }).forEach(function(chunk) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
-          var source = compilation.assets[file].source().split("/* 0 */\n/***/ function(module, exports) {");
+          // "function(module, exports) {" is expected to be found at id 0.
+          var source = compilation.assets[file].source().split("\n/***/ function(module, exports) {");
           compilation.assets[file] = new ConcatSource(
             source[0],
 
-            "/* 0 */\n/***/ function(module, exports, __webpack_require__) {",
+            "\n/***/ function(module, exports, __webpack_require__) {",
 
             // Set chunk using the whole formatters and parsers as the initial module 0.
             globalizeCompilerHelper.compile(locale)

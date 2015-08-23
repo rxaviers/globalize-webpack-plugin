@@ -8,6 +8,7 @@ function GlobalizeCompilerHelper(attributes) {
   this.extractsMap = {};
   this.modules = {};
 
+  this.cldr = attributes.cldr;
   this.developmentLocale = attributes.developmentLocale;
   this.messages = attributes.messages;
   this.tmpdir = attributes.tmpdir;
@@ -46,6 +47,7 @@ GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
   var messages = this.messages;
 
   var attributes = {
+    cldr: this.cldr,
     defaultLocale: locale,
     extracts: request ? this.getExtract(request) : this.extracts
   };
