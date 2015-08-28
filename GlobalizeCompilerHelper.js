@@ -10,7 +10,7 @@ function GlobalizeCompilerHelper(attributes) {
 
   this.cldr = attributes.cldr;
   this.developmentLocale = attributes.developmentLocale;
-  this.messages = attributes.messages;
+  this.messages = attributes.messages || {};
   this.tmpdir = attributes.tmpdir;
   this.webpackCompiler = attributes.webpackCompiler;
 }
@@ -40,10 +40,11 @@ GlobalizeCompilerHelper.prototype.createCompiledDataModule = function(request) {
 };
 
 GlobalizeCompilerHelper.prototype.getModuleFilepath = function(request) {
-  return path.join(this.tmpdir, request.replace(/\//g, "-"));
+  return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[/?" ]/g, "-"));
 };
 
 GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
+  var content;
   var messages = this.messages;
 
   var attributes = {
@@ -56,12 +57,25 @@ GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
     attributes.messages = messages[locale];
   }
 
-  this.webpackCompiler.applyPlugins("globalize-before-generate-bundle", locale, attributes);
+  this.webpackCompiler.applyPlugins("globalize-before-compile-extracts", locale, attributes, request);
 
-  return globalizeCompiler.compileExtracts(attributes)
+  try {
+    content = globalizeCompiler.compileExtracts(attributes);
+  } catch(e) {
+    // The only case to throw is when it's missing formatters/parsers for the
+    // whole chunk, i.e., when `request` isn't present; or when error is
+    // something else obviously. If a particular file misses formatters/parsers,
+    // it can be safely ignored (i.e., by using a stub content), because in the
+    // end generating the content for the whole chunk will ultimately verify
+    // whether of not no formatters/parsers has been used.
+    if (!/No formatters or parsers has been provided/.test(e.message) || !request) {
+      throw e;
+    }
+    content = "module.exports = {};";
+  }
 
-    // Inject set defaultLocale.
-    .replace(/(return Globalize;)/, "Globalize.locale(\"" + locale + "\"); $1");
+  // Inject set defaultLocale.
+  return content.replace(/(return Globalize;)/, "Globalize.locale(\"" + locale + "\"); $1");
 };
 
 GlobalizeCompilerHelper.prototype.isCompiledDataModule = function(request) {

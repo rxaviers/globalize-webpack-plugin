@@ -26,6 +26,7 @@ function ProductionModePlugin(attributes) {
 }
 
 ProductionModePlugin.prototype.apply = function(compiler) {
+  var globalizeSkipAMDPlugin;
   var cldr = this.cldr;
   var developmentLocale = this.developmentLocale;
   var messages = this.messages;
@@ -42,7 +43,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
 
   compiler.apply(
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
+    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
 
     // Replaces `require("globalize")` with `require("globalize/dist/globalize-runtime")`.
     new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
@@ -76,9 +77,19 @@ ProductionModePlugin.prototype.apply = function(compiler) {
 
       // Skip the AMD part of the custom precompiled formatters/parsers UMD
       // wrapper.
-      compiler.apply(
-        new SkipAMDPlugin(new RegExp(compiledDataFilepath))
-      );
+      //
+      // Note: We're hacking an already created SkipAMDPlugin instance instead
+      // of using a regular code like the below in order to take advantage of
+      // its position in the plugins list. Otherwise, it'd be too late to plugin
+      // and AMD would no longer be skipped at this point.
+      //
+      // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
+      //
+      // 1: Removes the leading and the trailing `/` from the regexp string.
+      globalizeSkipAMDPlugin.requestRegExp = new RegExp([
+        globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
+        compiledDataFilepath
+      ].join("|"));
 
       // Replace require("globalize") with require(<custom precompiled module>).
       dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
@@ -198,23 +209,27 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       }).forEach(function(chunk) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
-          // "function(module, exports) {" is expected to be found at id 0.
-          var source = compilation.assets[file].source().split("\n/***/ function(module, exports) {");
-          compilation.assets[file] = new ConcatSource(
-            source[0],
+          var isFirst = true;
+          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
+            var fnContent;
 
-            "\n/***/ function(module, exports, __webpack_require__) {",
+            // Define the initial module 0 as the whole formatters and parsers.
+            if (isFirst) {
+              isFirst = false;
+              fnContent = globalizeCompilerHelper.compile(locale)
+                .replace("typeof define === \"function\" && define.amd", "false")
+                .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
+                  return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
+                });
 
-            // Set chunk using the whole formatters and parsers as the initial module 0.
-            globalizeCompilerHelper.compile(locale)
-              .replace("typeof define === \"function\" && define.amd", "false")
-              .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
-                return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
-              }),
+            // Define all other individual globalize compiled data as a simple exports to Globalize.
+            } else {
+              fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
+            }
 
-            // Simplify each individual globalize compiled data by returning Globalize only.
-            source[1] = source[1].replace(/(\n\/\*\*\*\/ function\(module, exports, __webpack_require__\) {)[\s\S]*?(\n\/\*\*\*\/ })/g, "$1\nmodule.exports = __webpack_require__(" + globalizeModuleIds[0] + ");$2")
-          );
+            return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+          });
+          compilation.assets[file] = new ConcatSource(source);
         });
       });
     });
