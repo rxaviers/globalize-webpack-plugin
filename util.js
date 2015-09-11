@@ -36,7 +36,8 @@ module.exports = {
   readMessages: function(messagesFilepath, locale) {
     messagesFilepath = messagesFilepath.replace("[locale]", locale);
     if (!fs.existsSync(messagesFilepath) || !fs.statSync(messagesFilepath).isFile()) {
-      throw new Error("Unable to find messages file: `" + messagesFilepath + "`");
+      console.warn("Unable to find messages file: `" + messagesFilepath + "`");
+      return null;
     }
     return JSON.parse(fs.readFileSync(messagesFilepath));
   },

@@ -17,7 +17,7 @@ function ProductionModePlugin(attributes) {
   this.cldr = attributes.cldr || util.cldr;
   this.developmentLocale = attributes.developmentLocale;
   this.messages = attributes.messages && attributes.supportedLocales.reduce(function(sum, locale) {
-    sum[locale] = util.readMessages(attributes.messages, locale); 
+    sum[locale] = util.readMessages(attributes.messages, locale) || {};
     return sum;
   }, {});
   this.supportedLocales = attributes.supportedLocales;
