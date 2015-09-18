@@ -67,7 +67,7 @@ GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
     // something else obviously. If a particular file misses formatters/parsers,
     // it can be safely ignored (i.e., by using a stub content), because in the
     // end generating the content for the whole chunk will ultimately verify
-    // whether of not no formatters/parsers has been used.
+    // whether or not formatters/parsers has been used.
     if (!/No formatters or parsers has been provided/.test(e.message) || !request) {
       throw e;
     }
