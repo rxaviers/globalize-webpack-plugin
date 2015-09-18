@@ -118,7 +118,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   compiler.plugin("this-compilation", function(compilation) {
     compilation.plugin("after-optimize-chunks", function(chunks) {
       var hasAnyModuleBeenIncluded;
-      var compiledDataDataChunks = chunks.filter(function(chunk) {
+      var compiledDataChunks = chunks.filter(function(chunk) {
         return /globalize-compiled-data/.test(chunk.name);
       });
       chunks.forEach(function(chunk) {
@@ -126,14 +126,14 @@ ProductionModePlugin.prototype.apply = function(compiler) {
           if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
             hasAnyModuleBeenIncluded = true;
             module.removeChunk(chunk);
-            compiledDataDataChunks.forEach(function(compiledDataDataChunk) {
-              compiledDataDataChunk.addModule(module);
-              module.addChunk(compiledDataDataChunk);
+            compiledDataChunks.forEach(function(compiledDataChunk) {
+              compiledDataChunk.addModule(module);
+              module.addChunk(compiledDataChunk);
             });
           }
         });
       });
-      compiledDataDataChunks.forEach(function(chunk) {
+      compiledDataChunks.forEach(function(chunk) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.filenameTemplate = output.replace("[locale]", locale);
       });
