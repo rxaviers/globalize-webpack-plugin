@@ -79,7 +79,7 @@ GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
 };
 
 GlobalizeCompilerHelper.prototype.isCompiledDataModule = function(request) {
-  return this.modules[request];
+  return request && this.modules[request.replace(/.*!/, "")];
 };
 
 
