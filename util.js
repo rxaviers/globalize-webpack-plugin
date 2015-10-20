@@ -2,7 +2,7 @@ var cldrData = require("cldr-data");
 var fs = require("fs");
 var path = require("path");
 
-var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames"];
+var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
 
 module.exports = {
   cldr: function(locale) {
