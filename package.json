@@ -22,12 +22,12 @@
   },
   "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
   "dependencies": {
-    "globalize-compiler": "0.0.x",
+    "globalize-compiler": "0.1.x",
     "skip-amd-webpack-plugin": "0.0.x"
   },
   "peerDependencies": {
     "cldr-data": ">=25",
-    "globalize": "1.1.0-alpha - 1.1.x",
+    "globalize": "^1.1.0-rc.5",
     "webpack": "^1.9.0"
   },
   "devDependencies": {
