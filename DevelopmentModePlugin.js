@@ -27,11 +27,13 @@ function DevelopmentModePlugin(attributes) {
   ].join("\n");
 
   this.i18nData = path.join(tmpdir, "dev-i18n-data.js");
+  this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
   fs.writeFileSync(this.i18nData, i18nDataTemplate);
 }
 
 DevelopmentModePlugin.prototype.apply = function(compiler) {
   var i18nData = this.i18nData;
+  var moduleFilter = this.moduleFilter;
 
   // Skip AMD part of Globalize Runtime UMD wrapper.
   compiler.apply(new SkipAMDPlugin(/(^|\/)globalize($|\/)/));
@@ -41,9 +43,9 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // Globalize, loads CLDR, set the default locale and then exports the
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
-    if(param.isString() && param.string === "globalize" &&
-          !util.isGlobalizeModule(this.state.current.request) &&
-          !(new RegExp(i18nData)).test(this.state.current.request)) {
+    var request = this.state.current.request;
+    if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
+          !(new RegExp(i18nData)).test(request)) {
       var dep;
 
       dep = new CommonJsRequireDependency(i18nData, param.range);

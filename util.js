@@ -4,6 +4,15 @@ var path = require("path");
 
 var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
 
+var isGlobalizeModule = function(filepath) {
+  filepath = filepath.split( "/" );
+  var i = filepath.lastIndexOf("globalize");
+  // 1: path should contain "globalize",
+  // 2: and it should appear either in the end (e.g., ../globalize) or right
+  // before it (e.g., ../globalize/date).
+  return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */;
+}
+
 module.exports = {
   cldr: function(locale) {
     return cldrData.entireSupplemental().concat(mainFiles.map(function(mainFile) {
@@ -11,14 +20,7 @@ module.exports = {
     }));
   },
 
-  isGlobalizeModule: function(filepath) {
-    filepath = filepath.split( "/" );
-    var i = filepath.lastIndexOf("globalize");
-    // 1: path should contain "globalize",
-    // 2: and it should appear either in the end (e.g., ../globalize) or right
-    // before it (e.g., ../globalize/date).
-    return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */;
-  },
+  isGlobalizeModule: isGlobalizeModule,
 
   isGlobalizeRuntimeModule: function(filepath) {
     filepath = filepath.split( "/" );
@@ -31,6 +33,18 @@ module.exports = {
     // 4: and it should appear in the end of the filepath.
     return (i !== -1 /* 1 */ && filepath.length - i === 2 /* 2 */) ||
       (j !== -1 /* 3 */ && filepath.length - j === 1 /* 4 */);
+  },
+
+  moduleFilterFn: function(moduleFilter) {
+    return function(filepath) {
+      var globalizeModule = isGlobalizeModule(filepath);
+
+      if (moduleFilter) {
+        return !(globalizeModule || moduleFilter(filepath));
+      } else {
+        return !globalizeModule;
+      }
+    }
   },
 
   readMessages: function(messagesFilepath, locale) {
