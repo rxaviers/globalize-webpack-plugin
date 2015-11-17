@@ -20,6 +20,7 @@ function ProductionModePlugin(attributes) {
     sum[locale] = util.readMessages(attributes.messages, locale) || {};
     return sum;
   }, {});
+  this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
   this.supportedLocales = attributes.supportedLocales;
   this.output = attributes.output;
   this.tmpdir = util.tmpdir();
@@ -29,6 +30,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   var globalizeSkipAMDPlugin;
   var cldr = this.cldr;
   var developmentLocale = this.developmentLocale;
+  var moduleFilter = this.moduleFilter;
   var messages = this.messages;
   var supportedLocales = this.supportedLocales;
   var output = this.output || "i18n-[locale].js";
@@ -63,8 +65,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
     var request = this.state.current.request;
-    if(param.isString() && param.string === "globalize" &&
-          !util.isGlobalizeModule(request) &&
+    if(param.isString() && param.string === "globalize" && moduleFilter(filepath) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
       var dep;
 

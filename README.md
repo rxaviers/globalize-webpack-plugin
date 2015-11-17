@@ -33,7 +33,8 @@ new globalizePlugin({
 	developmentLocale: "en", // locale to be used for development.
 	supportedLocales: [ "en", "es", "zh", ... ], // locales that should be built support for.
 	messages: "messages/[locale].json", // messages (optional)
-	output: "globalize-compiled-data-[locale].[hash].js" // build output.
+	output: "globalize-compiled-data-[locale].[hash].js", // build output.
+	moduleFilter: filterFunction // filter for modules to exclude from processing
 })
 ```
 
@@ -46,6 +47,8 @@ new globalizePlugin({
 *messages* tells the plugin where to find messages for a certain locale.
 
 *output* is the name scheme of the built files.
+
+*moduleFilter* is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
 
 ## Example
 
