@@ -14,29 +14,23 @@ var util = require("./util");
  *   them into globalize-compiled-data chunks.
  */
 function ProductionModePlugin(attributes) {
-  var transformExclusions = attributes.transformExclusions || [];
   this.cldr = attributes.cldr || util.cldr;
   this.developmentLocale = attributes.developmentLocale;
   this.messages = attributes.messages && attributes.supportedLocales.reduce(function(sum, locale) {
     sum[locale] = util.readMessages(attributes.messages, locale) || {};
     return sum;
   }, {});
+  this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
   this.supportedLocales = attributes.supportedLocales;
   this.output = attributes.output;
   this.tmpdir = util.tmpdir();
-
-  this.isTransformExcluded = function(filepath) {
-    return transformExclusions.some(function(fn) {
-      return fn.call(null, filepath);
-    });
-  }
 }
 
 ProductionModePlugin.prototype.apply = function(compiler) {
   var globalizeSkipAMDPlugin;
   var cldr = this.cldr;
   var developmentLocale = this.developmentLocale;
-  var isTransformExcluded = this.isTransformExcluded;
+  var moduleFilter = this.moduleFilter;
   var messages = this.messages;
   var supportedLocales = this.supportedLocales;
   var output = this.output || "i18n-[locale].js";
@@ -71,9 +65,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
     var request = this.state.current.request;
-    if(param.isString() && param.string === "globalize" &&
-          !util.isGlobalizeModule(request) &&
-          !isTransformExcluded(request) &&
+    if(param.isString() && param.string === "globalize" && moduleFilter(filepath) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
       var dep;
 
