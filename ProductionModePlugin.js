@@ -45,13 +45,13 @@ ProductionModePlugin.prototype.apply = function(compiler) {
 
   compiler.apply(
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
+    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|[\/\\])globalize($|[\/\\])/),
 
     // Replaces `require("globalize")` with `require("globalize/dist/globalize-runtime")`.
-    new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
+    new NormalModuleReplacementPlugin(/(^|[\/\\])globalize$/, "globalize/dist/globalize-runtime"),
 
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    new SkipAMDPlugin(/(^|\/)globalize-runtime($|\/)/)
+    new SkipAMDPlugin(/(^|[\/\\])globalize-runtime($|[\/\\])/)
   );
 
   // Map each AST and its request filepath.
@@ -89,7 +89,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       // 1: Removes the leading and the trailing `/` from the regexp string.
       globalizeSkipAMDPlugin.requestRegExp = new RegExp([
         globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
-        compiledDataFilepath
+        util.escapeRegex(compiledDataFilepath)
       ].join("|"));
 
       // Replace require("globalize") with require(<custom precompiled module>).
@@ -197,7 +197,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
           var request = module.request;
           if (request && util.isGlobalizeRuntimeModule(request)) {
             // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
-            aux = request.split("/");
+            aux = request.split(/[\/\\]/);
             aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
             globalizeModuleIds.push(module.id);
             globalizeModuleIdsMap[aux] = module.id;

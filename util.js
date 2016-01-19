@@ -5,7 +5,7 @@ var path = require("path");
 var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
 
 var isGlobalizeModule = function(filepath) {
-  filepath = filepath.split( "/" );
+  filepath = filepath.split( /[\/\\]/ );
   var i = filepath.lastIndexOf("globalize");
   // 1: path should contain "globalize",
   // 2: and it should appear either in the end (e.g., ../globalize) or right
@@ -23,7 +23,7 @@ module.exports = {
   isGlobalizeModule: isGlobalizeModule,
 
   isGlobalizeRuntimeModule: function(filepath) {
-    filepath = filepath.split( "/" );
+    filepath = filepath.split( /[\/\\]/ );
     var i = filepath.lastIndexOf("globalize-runtime");
     var j = filepath.lastIndexOf("globalize-runtime.js");
     // Either (1 and 2) or (3 and 4):
@@ -68,5 +68,9 @@ module.exports = {
     }
 
     return tmpdir;
+  },
+
+  escapeRegex: function(string) {
+    return string.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\")
   }
 };
