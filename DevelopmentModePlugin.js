@@ -36,7 +36,7 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   var moduleFilter = this.moduleFilter;
 
   // Skip AMD part of Globalize Runtime UMD wrapper.
-  compiler.apply(new SkipAMDPlugin(/(^|\/)globalize($|\/)/));
+  compiler.apply(new SkipAMDPlugin(/(^|[\/\\])globalize($|[\/\\])/));
 
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom generated template, which in turn requires
@@ -44,8 +44,9 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // Globalize object.
   compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
     var request = this.state.current.request;
+
     if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
-          !(new RegExp(i18nData)).test(request)) {
+          !(new RegExp(util.escapeRegex(i18nData))).test(request)) {
       var dep;
 
       dep = new CommonJsRequireDependency(i18nData, param.range);
