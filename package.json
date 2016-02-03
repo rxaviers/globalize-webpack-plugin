@@ -1,6 +1,6 @@
 {
   "name": "globalize-webpack-plugin",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
   "dependencies": {
-    "globalize-compiler": "0.1.x",
+    "globalize-compiler": "^0.2.0",
     "skip-amd-webpack-plugin": "0.0.x"
   },
   "peerDependencies": {
