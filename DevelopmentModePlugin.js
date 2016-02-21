@@ -14,14 +14,21 @@ function DevelopmentModePlugin(attributes) {
   var cldr = attributes.cldr || util.cldr;
   var tmpdir = util.tmpdir();
 
-  messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
-
+  this.messagesPath =  path.resolve(attributes.messages.replace("[locale]", attributes.developmentLocale));
+  
   i18nDataTemplate = [
+    "var messages = require(\"" + this.messagesPath + "\");",
+    "",
     "var Globalize = require(\"globalize\");",
     "",
     "Globalize.load(" + JSON.stringify(cldr(attributes.developmentLocale)) + ");",
-    messages ?  "Globalize.loadMessages(" + JSON.stringify(messages) + ");": "",
+    this.messagesPath ?  "Globalize.loadMessages(messages);" : "",
     "Globalize.locale(" + JSON.stringify(attributes.developmentLocale) + ");",
+    "",
+    "if (module.hot) {",
+    "  Globalize.loadMessages(messages);",
+    "  module.hot.accept();",
+    "}",
     "",
     "module.exports = Globalize;"
   ].join("\n");
