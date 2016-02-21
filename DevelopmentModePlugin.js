@@ -14,11 +14,9 @@ function DevelopmentModePlugin(attributes) {
   var cldr = attributes.cldr || util.cldr;
   var tmpdir = util.tmpdir();
 
-  this.messagesPath =  path.resolve(attributes.messages.replace("[locale]", attributes.developmentLocale));
-  
+  this.messagesPath = path.resolve(attributes.messages.replace("[locale]", attributes.developmentLocale));
   i18nDataTemplate = [
     "var messages = require(\"" + this.messagesPath + "\");",
-    "",
     "var Globalize = require(\"globalize\");",
     "",
     "Globalize.load(" + JSON.stringify(cldr(attributes.developmentLocale)) + ");",
