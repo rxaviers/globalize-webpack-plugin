@@ -1,3 +1,4 @@
+var PrerenderModePlugin = require("./PrerenderModePlugin");
 var ProductionModePlugin = require("./ProductionModePlugin");
 var DevelopmentModePlugin = require("./DevelopmentModePlugin");
 
@@ -18,8 +19,10 @@ function GlobalizePlugin(attributes) {
 GlobalizePlugin.prototype.apply = function(compiler) {
   compiler.apply(
     this.attributes.production ?
-    new ProductionModePlugin(this.attributes) :
-    new DevelopmentModePlugin(this.attributes)
+      (compiler.options.target === "node" ? 
+        new PrerenderModePlugin(this.attributes) : 
+        new ProductionModePlugin(this.attributes) ) :
+      new DevelopmentModePlugin(this.attributes)
   );
 };
 
