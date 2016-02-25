@@ -218,7 +218,7 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
     //
     // TODO: Can we do this differently than using regexps?
     compilation.moduleTemplate.plugin("render", function(moduleSource, module, chunk, dependencyTemplates) {
-      if(!module.request) {
+      if(/globalize-compiled-data/.test(chunk.name) && !module.request) {
     	  
         // hack? to convince the webpack into adding __webpack_require__ to the function arg list
         module.addDependency(new NullDependency());
