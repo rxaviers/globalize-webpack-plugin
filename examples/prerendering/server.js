@@ -31,7 +31,7 @@ function handleRequest(request, response){
 	if(!fs.existsSync(languagePath)) {
 		console.info(languagePath + " not found, setting to english");
 		language = "en";
-		languagePath = path.join(__dirname, "../../.tmp/prerender/i18n/en.app.js");
+		languagePath = path.join(__dirname, "./dist/prerender/i18n/en.app.js");
 	}
 	prerenderedApp(languagePath);
 	
