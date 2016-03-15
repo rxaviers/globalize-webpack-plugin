@@ -116,23 +116,29 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // developmentLocale. All globalize-compiled-data chunks will equally include all
   // precompiled modules for the developmentLocale instead of their respective
   // locales. This will get fixed in the subsquent step.
+  var allModules;
+  compiler.plugin("this-compilation", function(compilation) {
+    compilation.plugin("optimize-modules", function(modules) {
+      allModules = modules;
+    });
+  });
   compiler.plugin("this-compilation", function(compilation) {
     compilation.plugin("after-optimize-chunks", function(chunks) {
       var hasAnyModuleBeenIncluded;
       var compiledDataChunks = chunks.filter(function(chunk) {
         return /globalize-compiled-data/.test(chunk.name);
       });
-      chunks.forEach(function(chunk) {
-        chunk.modules.forEach(function(module) {
-          if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
-            hasAnyModuleBeenIncluded = true;
+      allModules.forEach(function(module) {
+        if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
+          hasAnyModuleBeenIncluded = true;
+          module.chunks.forEach(function(chunk) {
             module.removeChunk(chunk);
-            compiledDataChunks.forEach(function(compiledDataChunk) {
-              compiledDataChunk.addModule(module);
-              module.addChunk(compiledDataChunk);
-            });
-          }
-        });
+          });
+          compiledDataChunks.forEach(function(compiledDataChunk) {
+            compiledDataChunk.addModule(module);
+            module.addChunk(compiledDataChunk);
+          });
+        }
       });
       compiledDataChunks.forEach(function(chunk) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
