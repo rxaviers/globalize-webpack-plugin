@@ -10,25 +10,26 @@ var util = require("./util");
  * - Automatically define default locale (i.e., injects `Globalize.locale(<defaultLocale>)`).
  */
 function DevelopmentModePlugin(attributes) {
-  var i18nDataTemplate, messages;
+  var i18nDataTemplate;
   var cldr = attributes.cldr || util.cldr;
   var tmpdir = util.tmpdir();
 
-  this.messagesPath =  path.resolve(attributes.messages.replace("[locale]", attributes.developmentLocale));
+  var messagesPath =  path.resolve(attributes.messages.replace("[locale]", attributes.developmentLocale));
   
   i18nDataTemplate = [
-    "var messages = require(\"" + this.messagesPath + "\");",
+    "var messages = require(\"" + messagesPath + "\");",
     "",
     "var Globalize = require(\"globalize\");",
     "",
     "Globalize.load(" + JSON.stringify(cldr(attributes.developmentLocale)) + ");",
-    this.messagesPath ?  "Globalize.loadMessages(messages);" : "",
+    messagesPath ? [
+      "Globalize.loadMessages(messages);",
+      "if (module.hot) {",
+      "  Globalize.loadMessages(messages);",
+      "  module.hot.accept();",
+      "}",
+    ].join("\n") : "",
     "Globalize.locale(" + JSON.stringify(attributes.developmentLocale) + ");",
-    "",
-    "if (module.hot) {",
-    "  Globalize.loadMessages(messages);",
-    "  module.hot.accept();",
-    "}",
     "",
     "module.exports = Globalize;"
   ].join("\n");
