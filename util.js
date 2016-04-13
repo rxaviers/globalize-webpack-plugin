@@ -11,7 +11,7 @@ var isGlobalizeModule = function(filepath) {
   // 2: and it should appear either in the end (e.g., ../globalize) or right
   // before it (e.g., ../globalize/date).
   return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */;
-}
+};
 
 module.exports = {
   cldr: function(locale) {
@@ -44,7 +44,7 @@ module.exports = {
       } else {
         return !globalizeModule;
       }
-    }
+    };
   },
 
   readMessages: function(messagesFilepath, locale) {
@@ -71,6 +71,6 @@ module.exports = {
   },
 
   escapeRegex: function(string) {
-    return string.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\")
+    return string.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\");
   }
 };
