@@ -1,7 +1,6 @@
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
 var ConcatSource = require("webpack/lib/ConcatSource");
 var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
-var ModuleFilenameHelpers = require("webpack/lib/ModuleFilenameHelpers");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
 var NullDependency = require("webpack/lib/dependencies/NullDependency");
@@ -61,6 +60,14 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
   // Map each AST and its request filepath.
   compiler.parser.plugin("program", function(ast) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
+  });
+  
+  compiler.plugin("compilation", function(compilation, params) {
+    var normalModuleFactory = params.normalModuleFactory;
+    var contextModuleFactory = params.contextModuleFactory;
+
+    compilation.dependencyFactories.set(CommonJsRequireDependency, normalModuleFactory);
+    compilation.dependencyTemplates.set(CommonJsRequireDependency, new CommonJsRequireDependency.Template());
   });
 
   // "Intercepts" all `require("globalize")` by transforming them into a
@@ -133,7 +140,7 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
           if (module.request && util.isGlobalizeRuntimeModule(module.request)) {
             modulesToMove.push({chunk: chunk, module: module});
           }
-        })
+        });
       });
       modulesToMove.forEach(function(item) {       
 	    compiledDataChunks.forEach(function(compiledDataChunk) {
@@ -217,7 +224,7 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
     // 
     //
     // TODO: Can we do this differently than using regexps?
-    compilation.moduleTemplate.plugin("render", function(moduleSource, module, chunk, dependencyTemplates) {
+    compilation.moduleTemplate.plugin("render", function(moduleSource, module, chunk) {
       if(/globalize-compiled-data/.test(chunk.name) && !module.request) {
     	  
         // hack? to convince the webpack into adding __webpack_require__ to the function arg list
@@ -229,16 +236,16 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
         .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
           return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
         });
-          return new PrefixSource(this.outputOptions.sourcePrefix, source);
-      } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
-        var source = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
         return new PrefixSource(this.outputOptions.sourcePrefix, source);
+      } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
+        var newSource = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
+        return new PrefixSource(this.outputOptions.sourcePrefix, newSource);
       }
        
       return moduleSource;
     });
     
-    compilation.mainTemplate.plugin("render", function(bootstrapSource, chunk, hash, moduleTemplate, dependencyTemplates) {
+    compilation.mainTemplate.plugin("render", function(bootstrapSource, chunk) {
       if(!/globalize-compiled-data/.test(chunk.name)) {
         var source = new ConcatSource();
         source.add("(function(localeFile) {\nreturn ");

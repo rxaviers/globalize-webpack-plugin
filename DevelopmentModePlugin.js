@@ -10,7 +10,7 @@ var util = require("./util");
  * - Automatically define default locale (i.e., injects `Globalize.locale(<defaultLocale>)`).
  */
 function DevelopmentModePlugin(attributes) {
-  var i18nDataTemplate, messages;
+  var i18nDataTemplate;
   var cldr = attributes.cldr || util.cldr;
   var tmpdir = util.tmpdir();
 
@@ -43,6 +43,14 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // Skip AMD part of Globalize Runtime UMD wrapper.
   compiler.apply(new SkipAMDPlugin(/(^|\/)globalize($|\/)/));
 
+  compiler.plugin("compilation", function(compilation, params) {
+		var normalModuleFactory = params.normalModuleFactory;
+		var contextModuleFactory = params.contextModuleFactory;
+
+		compilation.dependencyFactories.set(CommonJsRequireDependency, normalModuleFactory);
+		compilation.dependencyTemplates.set(CommonJsRequireDependency, new CommonJsRequireDependency.Template());
+  });
+  
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom generated template, which in turn requires
   // Globalize, loads CLDR, set the default locale and then exports the

@@ -4,6 +4,8 @@ var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
 var ModuleFilenameHelpers = require("webpack/lib/ModuleFilenameHelpers");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
+var NullDependency = require("webpack/lib/dependencies/NullDependency");
+var PrefixSource = require("webpack-core/lib/PrefixSource");
 var SkipAMDPlugin = require("skip-amd-webpack-plugin");
 var util = require("./util");
 
@@ -34,7 +36,9 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   var messages = this.messages;
   var supportedLocales = this.supportedLocales;
   var output = this.output || "i18n-[locale].js";
-
+  var globalizeModuleIds = [];
+  var globalizeModuleIdsMap = {};
+  
   var globalizeCompilerHelper = new GlobalizeCompilerHelper({
     cldr: cldr,
     developmentLocale: developmentLocale,
@@ -59,6 +63,14 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
   });
 
+  compiler.plugin("compilation", function(compilation, params) {
+    var normalModuleFactory = params.normalModuleFactory;
+    var contextModuleFactory = params.contextModuleFactory;
+
+    compilation.dependencyFactories.set(CommonJsRequireDependency, normalModuleFactory);
+    compilation.dependencyTemplates.set(CommonJsRequireDependency, new CommonJsRequireDependency.Template());
+  });
+  
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom precompiled formatters/parsers, which in turn
   // requires Globalize, set the default locale and then exports the
@@ -142,6 +154,18 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         console.warn("No Globalize compiled data module found");
       }
     });
+    
+    compilation.plugin("after-optimize-module-ids", function(modules) {
+        modules.forEach(function(module) {
+          if (module.request && util.isGlobalizeRuntimeModule(module.request)) {
+            // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
+            var aux = module.request.split("/");
+            aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
+            globalizeModuleIds.push(module.id);
+            globalizeModuleIdsMap[aux] = module.id; 
+          }
+        });
+      });
 
     // Have each globalize-compiled-data chunks to include precompiled data for
     // each supportedLocales. On each chunk, merge all the precompiled modules
@@ -187,53 +211,30 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     // Uglify).
     //
     // TODO: Can we do this differently than using regexps?
-    compilation.plugin("additional-chunk-assets", function(chunks) {
-      var globalizeModuleIds = [];
-      var globalizeModuleIdsMap = {};
-
-      chunks.forEach(function(chunk) {
-        chunk.modules.forEach(function(module) {
-          var aux;
-          var request = module.request;
-          if (request && util.isGlobalizeRuntimeModule(request)) {
-            // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
-            aux = request.split("/");
-            aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
-            globalizeModuleIds.push(module.id);
-            globalizeModuleIdsMap[aux] = module.id;
-          }
-        });
-      });
-
-      chunks.filter(function(chunk) {
-        return /globalize-compiled-data/.test(chunk.name);
-      }).forEach(function(chunk) {
-        var locale = chunk.name.replace("globalize-compiled-data-", "");
-        chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
-          var isFirst = true;
-          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
-            var fnContent;
-
-            // Define the initial module 0 as the whole formatters and parsers.
-            if (isFirst) {
-              isFirst = false;
-              fnContent = globalizeCompilerHelper.compile(locale)
-                .replace("typeof define === \"function\" && define.amd", "false")
-                .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
-                  return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
-                });
-
-            // Define all other individual globalize compiled data as a simple exports to Globalize.
-            } else {
-              fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
-            }
-
-            return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+    compilation.moduleTemplate.plugin("render", function(moduleSource, module, chunk) {
+        if(/globalize-compiled-data/.test(chunk.name) && !module.request) {
+      	  
+          // hack? to convince the webpack into adding __webpack_require__ to the function arg list
+          module.addDependency(new NullDependency());
+      		
+          var locale = chunk.name.replace("globalize-compiled-data-", "");
+          var source = globalizeCompilerHelper.compile(locale)
+          .replace("typeof define === \"function\" && define.amd", "false")
+          .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
+            return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
           });
-          compilation.assets[file] = new ConcatSource(source);
-        });
-      });
+          return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(source));
+        } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
+          // hack? to convince the webpack into adding __webpack_require__ to the function arg list
+          module.addDependency(new NullDependency());
+        	
+          var newSource = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
+          return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(newSource));
+        }
+         
+        return moduleSource;
     });
+    
 
     // Set the right chunks order. The globalize-compiled-data chunks must
     // appear after globalize runtime modules, but before any app code.
