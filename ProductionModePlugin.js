@@ -226,7 +226,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
           return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(source));
         } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
           // hack? to convince the webpack into adding __webpack_require__ to the function arg list
-          module.addDependency(new NullDependency());
+//          module.addDependency(new NullDependency());
         	
           var newSource = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
           return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(newSource));
