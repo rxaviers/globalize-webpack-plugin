@@ -23,7 +23,8 @@
   "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
   "dependencies": {
     "globalize-compiler": "^0.2.0",
-    "skip-amd-webpack-plugin": "0.1.x"
+    "skip-amd-webpack-plugin": "0.1.x",
+    "webpack-sources": "^0.1.2"
   },
   "peerDependencies": {
     "cldr-data": ">=25",
