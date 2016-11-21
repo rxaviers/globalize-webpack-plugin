@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:jquery-support/globalize-webpack-plugin.git"
+    "url": "git@github.com:rxaviers/globalize-webpack-plugin.git"
   },
   "keywords": [
     "globalize",
@@ -18,9 +18,9 @@
   "author": "Rafael Xavier de Souza",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/jquery-support/globalize-webpack-plugin/issues"
+    "url": "https://github.com/rxaviers/globalize-webpack-plugin/issues"
   },
-  "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
+  "homepage": "https://github.com/rxaviers/globalize-webpack-plugin",
   "dependencies": {
     "globalize-compiler": "^0.2.0",
     "skip-amd-webpack-plugin": "0.1.x",
