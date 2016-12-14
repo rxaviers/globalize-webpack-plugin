@@ -28,7 +28,7 @@
   },
   "peerDependencies": {
     "cldr-data": ">=25",
-    "globalize": "^1.1.0-rc.5 || >=1.2.0-a <2.0.0",
+    "globalize": "^1.1.0-rc.5",
     "webpack": "^1.9.0"
   },
   "devDependencies": {
