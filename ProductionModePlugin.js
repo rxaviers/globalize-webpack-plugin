@@ -55,51 +55,59 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   );
 
   // Map each AST and its request filepath.
-  compiler.parser.plugin("program", function(ast) {
-    globalizeCompilerHelper.setAst(this.state.current.request, ast);
+  compiler.plugin('compilation', function(compilation, data) {
+    data.normalModuleFactory.plugin('parser', function(parser) {
+      parser.plugin("program", function(ast) {
+        globalizeCompilerHelper.setAst(this.state.current.request, ast);
+      })
+    })
   });
 
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom precompiled formatters/parsers, which in turn
   // requires Globalize, set the default locale and then exports the
   // Globalize object.
-  compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
-    var request = this.state.current.request;
-    if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
+  compiler.plugin('compilation', function(compilation, data) {
+    data.normalModuleFactory.plugin('parser', function(parser) {
+      parser.plugin("call require:commonjs:item", function(expr, param) {
+        var request = this.state.current.request;
+        if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
-      var dep;
+          var dep;
 
-      // Statically extract Globalize formatters and parsers from the request
-      // file only. Then, create a custom precompiled formatters/parsers module
-      // that will be called instead of Globalize, which in turn requires
-      // Globalize, set the default locale and then exports the Globalize
-      // object.
-      var compiledDataFilepath = globalizeCompilerHelper.createCompiledDataModule(request);
+          // Statically extract Globalize formatters and parsers from the request
+          // file only. Then, create a custom precompiled formatters/parsers module
+          // that will be called instead of Globalize, which in turn requires
+          // Globalize, set the default locale and then exports the Globalize
+          // object.
+          var compiledDataFilepath = globalizeCompilerHelper.createCompiledDataModule(request);
 
-      // Skip the AMD part of the custom precompiled formatters/parsers UMD
-      // wrapper.
-      //
-      // Note: We're hacking an already created SkipAMDPlugin instance instead
-      // of using a regular code like the below in order to take advantage of
-      // its position in the plugins list. Otherwise, it'd be too late to plugin
-      // and AMD would no longer be skipped at this point.
-      //
-      // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
-      //
-      // 1: Removes the leading and the trailing `/` from the regexp string.
-      globalizeSkipAMDPlugin.requestRegExp = new RegExp([
-        globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
-        util.escapeRegex(compiledDataFilepath)
-      ].join("|"));
+          // Skip the AMD part of the custom precompiled formatters/parsers UMD
+          // wrapper.
+          //
+          // Note: We're hacking an already created SkipAMDPlugin instance instead
+          // of using a regular code like the below in order to take advantage of
+          // its position in the plugins list. Otherwise, it'd be too late to plugin
+          // and AMD would no longer be skipped at this point.
+          //
+          // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
+          //
+          // 1: Removes the leading and the trailing `/` from the regexp string.
+          globalizeSkipAMDPlugin.requestRegExp = new RegExp([
+            globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
+            util.escapeRegex(compiledDataFilepath)
+          ].join("|"));
 
-      // Replace require("globalize") with require(<custom precompiled module>).
-      dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
-      dep.loc = expr.loc;
-      dep.optional = !!this.scope.inTry;
-      this.state.current.addDependency(dep);
+          // Replace require("globalize") with require(<custom precompiled module>).
+          dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
+          dep.loc = expr.loc;
+          dep.optional = !!this.scope.inTry;
+          this.state.current.addDependency(dep);
 
-      return true;
-    }
+          return true;
+        }
+      })
+    })
   });
 
   // Create globalize-compiled-data chunks for the supportedLocales.
@@ -192,7 +200,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     //    loaded. So, we accomplish what we need: have the data loaded as soon
     //    as the chunk is loaded, which means it will be available when each
     //    individual parent code needs it.
-    // 
+    //
     // OBS: `additional-chunk-assets` is used to make globalize-compiled-data
     // changes right before `optimize-chunk-assets` (used by plugins like
     // Uglify).

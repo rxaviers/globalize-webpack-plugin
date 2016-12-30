@@ -42,20 +42,24 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // `require` to our custom generated template, which in turn requires
   // Globalize, loads CLDR, set the default locale and then exports the
   // Globalize object.
-  compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
-    var request = this.state.current.request;
+  compiler.plugin('compilation', function(compilation, data) {
+    data.normalModuleFactory.plugin('parser', function(parser) {
+      parser.plugin("call require:commonjs:item", function(expr, param) {
+        var request = this.state.current.request;
 
-    if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
+        if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
           !(new RegExp(util.escapeRegex(i18nData))).test(request)) {
-      var dep;
+          var dep;
 
-      dep = new CommonJsRequireDependency(i18nData, param.range);
-      dep.loc = expr.loc;
-      dep.optional = !!this.scope.inTry;
-      this.state.current.addDependency(dep);
+          dep = new CommonJsRequireDependency(i18nData, param.range);
+          dep.loc = expr.loc;
+          dep.optional = !!this.scope.inTry;
+          this.state.current.addDependency(dep);
 
-      return true;
-    }
+          return true;
+        }
+      })
+    })
   });
 };
 
