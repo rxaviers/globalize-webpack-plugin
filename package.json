@@ -1,6 +1,6 @@
 {
   "name": "globalize-webpack-plugin",
-  "version": "0.3.9",
+  "version": "0.3.10",
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
