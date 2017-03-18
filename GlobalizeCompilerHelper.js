@@ -1,3 +1,4 @@
+var crypto = require('crypto');
 var fs = require("fs");
 var globalizeCompiler = require("globalize-compiler");
 var path = require("path");
@@ -40,7 +41,12 @@ GlobalizeCompilerHelper.prototype.createCompiledDataModule = function(request) {
 };
 
 GlobalizeCompilerHelper.prototype.getModuleFilepath = function(request) {
-  return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[\/\\?" :]/g, "-"));
+  var filepath = request.replace(/.*!/, "");
+  var tmpfile = crypto
+    .createHash('sha1')
+    .update(filepath, 'utf8')
+    .digest('hex') + '.js';
+  return path.join(this.tmpdir, tmpfile);
 };
 
 GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
