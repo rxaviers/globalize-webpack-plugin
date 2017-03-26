@@ -1,4 +1,4 @@
-var crypto = require('crypto');
+var crypto = require("crypto");
 var fs = require("fs");
 var globalizeCompiler = require("globalize-compiler");
 var path = require("path");
@@ -40,12 +40,29 @@ GlobalizeCompilerHelper.prototype.createCompiledDataModule = function(request) {
   return filepath;
 };
 
+var _tmpFilesMap = {};
+function assertUniqueTmpfile(filepath, tmpfile) {
+  if (_tmpFilesMap[tmpfile] != null) {
+    if (_tmpFilesMap[tmpfile] != filepath) {
+      throw new Error(
+        "Multiple files map to temporary file \"" + tmpfile + "\":\n" +
+        [_tmpFilesMap[tmpfile], filepath].join('\n')
+      );
+    }
+  } else {
+    _tmpFilesMap[tmpfile] = filepath;
+  }
+}
+
 GlobalizeCompilerHelper.prototype.getModuleFilepath = function(request) {
   var filepath = request.replace(/.*!/, "");
   var tmpfile = crypto
-    .createHash('sha1')
-    .update(filepath, 'utf8')
-    .digest('hex') + '.js';
+    .createHash("sha1")
+    .update(filepath, "utf8")
+    .digest("hex") + ".js";
+
+  assertUniqueTmpfile(filepath, tmpfile);
+
   return path.join(this.tmpdir, tmpfile);
 };
 
