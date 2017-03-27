@@ -229,6 +229,16 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
           var isFirst = true;
+          // This regex handles output from webpack 1 and 2
+          // - webpack 1 looks like: 
+					//   /***/ function(module, exports, __webpack_require__) {
+					//   /***/   ... 
+ 					//   /***/ }
+          // - webpack 2 is wrapped in parenthesis and looks like 
+					//   /***/ (function(module, exports, __webpack_require__) {
+					//   /***/   ... 
+ 					//   /***/ }),
+					// See https://github.com/rxaviers/globalize-webpack-plugin/issues/38
           var moduleRegex = /\n\/\*\*\*\/ (\()function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })(\),)/g;
           var source = compilation.assets[file].source().replace(moduleRegex, function(garbage1, openParen, garbage2, fnTail, closeParen) {
             var fnContent;
