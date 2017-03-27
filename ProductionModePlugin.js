@@ -214,8 +214,11 @@ ProductionModePlugin.prototype.apply = function(compiler) {
             // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
             aux = request.split(/[\/\\]/);
             aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
-            globalizeModuleIds.push(module.id);
-            globalizeModuleIdsMap[aux] = module.id;
+
+            // some webpack plugins, like HashedModuleIds, may transform module.id into strings
+            const moduleId = Number.isInteger(module.id) ? module.id : JSON.stringify(module.id);
+            globalizeModuleIds.push(moduleId);
+            globalizeModuleIdsMap[aux] = moduleId;
           }
         });
       });
@@ -226,7 +229,8 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
           var isFirst = true;
-          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
+          var moduleRegex = /\n\/\*\*\*\/ (\()function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })(\),)/g;
+          var source = compilation.assets[file].source().replace(moduleRegex, function(garbage1, openParen, garbage2, fnTail, closeParen) {
             var fnContent;
 
             // Define the initial module 0 as the whole formatters and parsers.
@@ -243,7 +247,10 @@ ProductionModePlugin.prototype.apply = function(compiler) {
               fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
             }
 
-            return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+            openParen = openParen || '';
+            closeParen = closeParen || '';
+
+            return "\n/***/ " + openParen + "function(module, exports, __webpack_require__) {\n" + fnContent + fnTail + closeParen;
           });
           compilation.assets[file] = new ConcatSource(source);
         });
