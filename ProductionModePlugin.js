@@ -214,8 +214,16 @@ ProductionModePlugin.prototype.apply = function(compiler) {
             // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
             aux = request.split(/[\/\\]/);
             aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
-            globalizeModuleIds.push(module.id);
-            globalizeModuleIdsMap[aux] = module.id;
+
+            // some plugins, like HashedModuleIdsPlugin, may change module ids
+            // into strings.
+            var moduleId = module.id;
+            if (typeof moduleId === "string") {
+              moduleId = JSON.stringify(moduleId);
+            }
+
+            globalizeModuleIds.push(moduleId);
+            globalizeModuleIdsMap[aux] = moduleId;
           }
         });
       });
