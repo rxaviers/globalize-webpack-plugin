@@ -93,6 +93,12 @@ describe("Globalize Webpack Plugin", function() {
           expect(result).to.have.string("2017");
         });
 
+        it("should include support for formatDateToParts", function() {
+          var result = Globalize.formatDateToParts(new Date(2017, 3, 15), {date: "long"});
+          expect(result).to.include({type: "month", value: "April"});
+          expect(result).to.include({type: "year", value: "2017"});
+        });
+
         it("should include formatNumber", function() {
           var result = Globalize.formatNumber(Math.PI);
           expect(result).to.equal("3.142");
