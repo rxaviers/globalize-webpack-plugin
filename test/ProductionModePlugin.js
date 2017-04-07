@@ -127,6 +127,12 @@ function commonTests(testName, webpackConfig, outputPath) {
       expect(result).to.have.string("2017");
     });
 
+    it("should include support for formatDateToParts", () => {
+      const result = Globalize.formatDateToParts(new Date(2017, 3, 15), {date: "long"});
+      expect(result).to.include({type: "month", value: "April"});
+      expect(result).to.include({type: "year", value: "2017"});
+    });
+
     it("should include formatNumber", () => {
       const result = Globalize.formatNumber(Math.PI);
       expect(result).to.equal("3.142");

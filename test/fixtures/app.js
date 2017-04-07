@@ -5,6 +5,7 @@ let like;
 
 // Use Globalize to format dates.
 Globalize.formatDate( new Date(), { datetime: "medium" } );
+Globalize.formatDateToParts( new Date(), { date: "long" } );
 
 // Use Globalize to format numbers.
 Globalize.formatNumber( 12345.6789 );
