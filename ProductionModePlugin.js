@@ -226,7 +226,8 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
           var isFirst = true;
-          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
+          // Match either webpack 1.x or webpack 2.x
+          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ \(?function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
             var fnContent;
 
             // Define the initial module 0 as the whole formatters and parsers.
@@ -243,7 +244,15 @@ ProductionModePlugin.prototype.apply = function(compiler) {
               fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
             }
 
-            return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+            // Hack to support webpack 1.x and 2.x.
+            // webpack 2.x
+            if (NormalModuleFactory.prototype.createParser) {
+              return "\n/***/ (function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+
+            // webpack 1.x
+            } else {
+              return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+            }
           });
           compilation.assets[file] = new ConcatSource(source);
         });
