@@ -4,7 +4,7 @@
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
-    "test": "jshint *.js"
+    "test": "eslint *js"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,7 @@
     "webpack": "^1.9.0 || ^2.2.0-rc"
   },
   "devDependencies": {
-    "jshint": "2.6.x"
+    "eslint": "^3.19.0",
+    "eslint-config-defaults": "^9.0.0"
   }
 }
