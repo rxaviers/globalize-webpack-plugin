@@ -25,6 +25,7 @@ class ProductionModePlugin {
     this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
     this.supportedLocales = attributes.supportedLocales;
     this.output = attributes.output;
+    this.timeZoneData = attributes.timeZoneData || util.timeZoneData;
     const tmpdirBase = attributes.tmpdirBase || ".";
     this.tmpdir = util.tmpdir(tmpdirBase);
   }
@@ -36,6 +37,7 @@ class ProductionModePlugin {
       cldr: this.cldr,
       developmentLocale: this.developmentLocale,
       messages: this.messages,
+      timeZoneData: this.timeZoneData,
       tmpdir: this.tmpdir,
       webpackCompiler: compiler
     });

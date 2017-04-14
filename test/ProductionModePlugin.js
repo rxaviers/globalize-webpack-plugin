@@ -127,6 +127,14 @@ function commonTests(testName, webpackConfig, outputPath) {
       expect(result).to.have.string("2017");
     });
 
+    it("should include support for formatDate with timeZone support", () => {
+      const result = Globalize.formatDate(new Date("2017-04-15T12:00:00Z"), {
+        datetime: "full",
+        timeZone: "America/Sao_Paulo"
+      });
+      expect(result).to.equal("Saturday, April 15, 2017 at 9:00:00 AM Brasilia Standard Time");
+    });
+
     it("should include support for formatDateToParts", () => {
       const result = Globalize.formatDateToParts(new Date(2017, 3, 15), {date: "long"});
       expect(result).to.include({type: "month", value: "April"});
@@ -168,6 +176,14 @@ function commonTests(testName, webpackConfig, outputPath) {
       expect(result.getFullYear()).to.equal(1982);
       expect(result.getMonth()).to.equal(0);
       expect(result.getDate()).to.equal(2);
+    });
+
+    it("should include support for parseDate with timeZone support", function() {
+      const result = Globalize.parseDate("January 1, 2000 at 12:00:00 AM EST", {
+        datetime: "long",
+        timeZone: "America/New_York"
+      });
+      expect(result).to.deep.equal(new Date("2000-01-01T05:00:00Z"));
     });
   });
 }

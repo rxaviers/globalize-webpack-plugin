@@ -38,6 +38,7 @@ new globalizePlugin({
 	supportedLocales: [ "en", "es", "zh", ... ], // locales that should be built support for.
 	cldr: function() {}, // CLDR data (optional)
 	messages: "messages/[locale].json", // messages (optional)
+	timeZoneData: function() {}, // time zone data (optional)
 	output: "globalize-compiled-data-[locale].[hash].js", // build output.
 	moduleFilter: filterFunction, // filter for modules to exclude from processing
 	tempdirBase: ".", // optional for non create-react-apps
