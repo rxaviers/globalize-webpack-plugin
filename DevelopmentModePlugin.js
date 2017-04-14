@@ -13,6 +13,7 @@ var util = require("./util");
 function DevelopmentModePlugin(attributes) {
   var i18nDataTemplate, messages;
   var cldr = attributes.cldr || util.cldr;
+  var timeZoneData = attributes.timeZoneData || util.timeZoneData;
   var tmpdir = util.tmpdir();
 
   messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
@@ -22,6 +23,7 @@ function DevelopmentModePlugin(attributes) {
     "",
     "Globalize.load(" + JSON.stringify(cldr(attributes.developmentLocale)) + ");",
     messages ?  "Globalize.loadMessages(" + JSON.stringify(messages) + ");": "",
+    "Globalize.loadTimeZone(" + JSON.stringify(timeZoneData()) + ");",
     "Globalize.locale(" + JSON.stringify(attributes.developmentLocale) + ");",
     "",
     "module.exports = Globalize;"

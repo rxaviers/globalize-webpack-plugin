@@ -1,4 +1,5 @@
 var cldrData = require("cldr-data");
+var ianaTzData = require("iana-tz-data");
 var fs = require("fs");
 var path = require("path");
 
@@ -18,6 +19,10 @@ module.exports = {
     return cldrData.entireSupplemental().concat(mainFiles.map(function(mainFile) {
       return cldrData(path.join("main", locale, mainFile));
     }));
+  },
+
+  timeZoneData: function() {
+    return ianaTzData;
   },
 
   isGlobalizeModule: isGlobalizeModule,
