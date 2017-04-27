@@ -2,6 +2,7 @@ var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequir
 var ConcatSource = require("webpack-sources").ConcatSource;
 var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
+var NormalModuleFactory = require("webpack/lib/NormalModuleFactory");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
 var NullDependency = require("webpack/lib/dependencies/NullDependency");
 var PrefixSource = require("webpack-core/lib/PrefixSource");
