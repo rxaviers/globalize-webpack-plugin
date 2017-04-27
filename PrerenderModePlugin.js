@@ -49,27 +49,19 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
 
   compiler.apply(
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
+    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|[\/\\])globalize($|[\/\\])/),
 
     // Replaces `require("globalize")` with `require("globalize/dist/globalize-runtime")`.
-    new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
+    new NormalModuleReplacementPlugin(/(^|[\/\\])globalize$/, "globalize/dist/globalize-runtime"),
 
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    new SkipAMDPlugin(/(^|\/)globalize-runtime($|\/)/)
+    new SkipAMDPlugin(/(^|[\/\\])globalize-runtime($|[\/\\])/)
   );
-
+  
 var bindParser = function(parser) {
   // Map each AST and its request filepath.
   parser.plugin("program", function(ast) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
-  });
-  
-  compiler.plugin("compilation", function(compilation, params) {
-    var normalModuleFactory = params.normalModuleFactory;
-    var contextModuleFactory = params.contextModuleFactory;
-
-    compilation.dependencyFactories.set(CommonJsRequireDependency, normalModuleFactory);
-    compilation.dependencyTemplates.set(CommonJsRequireDependency, new CommonJsRequireDependency.Template());
   });
 
   // "Intercepts" all `require("globalize")` by transforming them into a

@@ -50,13 +50,13 @@ ProductionModePlugin.prototype.apply = function(compiler) {
 
   compiler.apply(
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|\/)globalize($|\/)/),
+    globalizeSkipAMDPlugin = new SkipAMDPlugin(/(^|[\/\\])globalize($|[\/\\])/),
 
     // Replaces `require("globalize")` with `require("globalize/dist/globalize-runtime")`.
-    new NormalModuleReplacementPlugin(/(^|\/)globalize$/, "globalize/dist/globalize-runtime"),
+    new NormalModuleReplacementPlugin(/(^|[\/\\])globalize$/, "globalize/dist/globalize-runtime"),
 
     // Skip AMD part of Globalize Runtime UMD wrapper.
-    new SkipAMDPlugin(/(^|\/)globalize-runtime($|\/)/)
+    new SkipAMDPlugin(/(^|[\/\\])globalize-runtime($|[\/\\])/)
   );
 
 var bindParser = function(parser) {
