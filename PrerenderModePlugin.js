@@ -57,6 +57,7 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
     new SkipAMDPlugin(/(^|\/)globalize-runtime($|\/)/)
   );
 
+var bindParser = function(parser) {
   // Map each AST and its request filepath.
   parser.plugin("program", function(ast) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
@@ -112,7 +113,7 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
       return true;
     }
   });
-
+}
   // Create globalize-compiled-data chunks for the supportedLocales.
   compiler.plugin("entry-option", function(context) {
     supportedLocales.forEach(function(locale) {
@@ -258,6 +259,18 @@ PrerenderModePlugin.prototype.apply = function(compiler) {
       return bootstrapSource;
     });
   });
-};    
+  
+  // Hack to support webpack 1.x and 2.x.
+  // webpack 2.x
+  if (NormalModuleFactory.prototype.createParser) {
+    compiler.plugin("compilation", function(compilation, params) {
+      params.normalModuleFactory.plugin("parser", bindParser);
+    });
+
+  // webpack 1.x
+  } else {
+    bindParser(compiler.parser);
+  }
+};   
 
 module.exports = PrerenderModePlugin;
