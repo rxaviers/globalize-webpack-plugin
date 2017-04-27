@@ -1,5 +1,6 @@
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
 var fs = require("fs");
+var NormalModuleFactory = require("webpack/lib/NormalModuleFactory");
 var path = require("path");
 var SkipAMDPlugin = require("skip-amd-webpack-plugin");
 var util = require("./util");
@@ -55,7 +56,8 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   // `require` to our custom generated template, which in turn requires
   // Globalize, loads CLDR, set the default locale and then exports the
   // Globalize object.
-  compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
+var bindParser = function(parser) {
+  parser.plugin("call require:commonjs:item", function(expr, param) {
     var request = this.state.current.request;
     if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
           !(new RegExp(i18nData)).test(request)) {
@@ -71,4 +73,17 @@ DevelopmentModePlugin.prototype.apply = function(compiler) {
   });
 };
 
+  // Hack to support webpack 1.x and 2.x.
+  // webpack 2.x
+  if (NormalModuleFactory.prototype.createParser) {
+    compiler.plugin("compilation", function(compilation, params) {
+      params.normalModuleFactory.plugin("parser", bindParser);
+    });
+
+  // webpack 1.x
+  } else {
+    bindParser(compiler.parser);
+  }
+ };
+ 
 module.exports = DevelopmentModePlugin;
