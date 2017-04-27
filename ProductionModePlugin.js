@@ -66,14 +66,6 @@ var bindParser = function(parser) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
   });
 
-  compiler.plugin("compilation", function(compilation, params) {
-    var normalModuleFactory = params.normalModuleFactory;
-    var contextModuleFactory = params.contextModuleFactory;
-
-    compilation.dependencyFactories.set(CommonJsRequireDependency, normalModuleFactory);
-    compilation.dependencyTemplates.set(CommonJsRequireDependency, new CommonJsRequireDependency.Template());
-  });
-  
   // "Intercepts" all `require("globalize")` by transforming them into a
   // `require` to our custom precompiled formatters/parsers, which in turn
   // requires Globalize, set the default locale and then exports the
@@ -102,10 +94,10 @@ var bindParser = function(parser) {
       // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
       //
       // 1: Removes the leading and the trailing `/` from the regexp string.
-      globalizeSkipAMDPlugin.requestRegExp = new RegExp([
-        globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
-        compiledDataFilepath
-      ].join("|"));
+        globalizeSkipAMDPlugin.requestRegExp = new RegExp([
+          globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
+          util.escapeRegex(compiledDataFilepath)
+        ].join("|"));
 
       // Replace require("globalize") with require(<custom precompiled module>).
       dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);

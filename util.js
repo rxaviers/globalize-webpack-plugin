@@ -5,12 +5,12 @@ var path = require("path");
 var mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
 
 var isGlobalizeModule = function(filepath) {
-  filepath = filepath.split( "/" );
+  filepath = filepath.split( /[\/\\]/ );
   var i = filepath.lastIndexOf("globalize");
   // 1: path should contain "globalize",
   // 2: and it should appear either in the end (e.g., ../globalize) or right
   // before it (e.g., ../globalize/date).
-  return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */;
+  return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */; // eslint-disable-line semi-spacing
 };
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
   isGlobalizeModule: isGlobalizeModule,
 
   isGlobalizeRuntimeModule: function(filepath) {
-    filepath = filepath.split( "/" );
+    filepath = filepath.split( /[\/\\]/ );
     var i = filepath.lastIndexOf("globalize-runtime");
     var j = filepath.lastIndexOf("globalize-runtime.js");
     // Either (1 and 2) or (3 and 4):
@@ -68,5 +68,9 @@ module.exports = {
     }
 
     return tmpdir;
+  },
+
+  escapeRegex: function(string) {
+    return string.replace(/(?=[\/\\^$*+?.()|{}[\]])/g, "\\");
   }
 };

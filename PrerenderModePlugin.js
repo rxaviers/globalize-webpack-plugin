@@ -92,10 +92,10 @@ var bindParser = function(parser) {
       // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
       //
       // 1: Removes the leading and the trailing `/` from the regexp string.
-      globalizeSkipAMDPlugin.requestRegExp = new RegExp([
-        globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
-        compiledDataFilepath
-      ].join("|"));
+        globalizeSkipAMDPlugin.requestRegExp = new RegExp([
+          globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
+          util.escapeRegex(compiledDataFilepath)
+        ].join("|"));
 
       // Replace require("globalize") with require(<custom precompiled module>).
       dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
