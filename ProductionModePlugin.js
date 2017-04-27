@@ -59,7 +59,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   );
 
   // Map each AST and its request filepath.
-  compiler.parser.plugin("program", function(ast) {
+  parser.plugin("program", function(ast) {
     globalizeCompilerHelper.setAst(this.state.current.request, ast);
   });
 
@@ -75,7 +75,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
   // `require` to our custom precompiled formatters/parsers, which in turn
   // requires Globalize, set the default locale and then exports the
   // Globalize object.
-  compiler.parser.plugin("call require:commonjs:item", function(expr, param) {
+  parser.plugin("call require:commonjs:item", function(expr, param) {
     var request = this.state.current.request;
     if(param.isString() && param.string === "globalize" && moduleFilter(request) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
