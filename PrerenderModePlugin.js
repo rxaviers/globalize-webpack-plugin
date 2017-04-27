@@ -1,5 +1,5 @@
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
-var ConcatSource = require("webpack/lib/ConcatSource");
+var ConcatSource = require("webpack-sources").ConcatSource;
 var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
