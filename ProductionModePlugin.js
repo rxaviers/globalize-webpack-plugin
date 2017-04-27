@@ -219,13 +219,13 @@ var bindParser = function(parser) {
           .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
             return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
           });
-          return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(source));
+          return new PrefixSource(this.outputOptions.sourcePrefix || "", new ConcatSource(source));
         } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
           // hack? to convince the webpack into adding __webpack_require__ to the function arg list
 //          module.addDependency(new NullDependency());
         	
           var newSource = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
-          return new PrefixSource(this.outputOptions.sourcePrefix, new ConcatSource(newSource));
+          return new PrefixSource(this.outputOptions.sourcePrefix || "", new ConcatSource(newSource));
         }
          
         return moduleSource;

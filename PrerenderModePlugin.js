@@ -230,10 +230,11 @@ var bindParser = function(parser) {
         .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
           return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
         });
-        return new PrefixSource(this.outputOptions.sourcePrefix, source);
+        
+        return new PrefixSource(this.outputOptions.sourcePrefix || "", source);
       } else if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
         var newSource = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
-        return new PrefixSource(this.outputOptions.sourcePrefix, newSource);
+        return new PrefixSource(this.outputOptions.sourcePrefix || "", newSource);
       }
        
       return moduleSource;
