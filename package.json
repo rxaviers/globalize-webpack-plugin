@@ -1,38 +1,98 @@
 {
-  "name": "globalize-webpack-plugin",
-  "version": "0.3.1",
+  "_args": [
+    [
+      "globalize-webpack-plugin",
+      "/Users/ataylor/git/justusnode"
+    ]
+  ],
+  "_from": "globalize-webpack-plugin@latest",
+  "_id": "globalize-webpack-plugin@0.3.12",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/globalize-webpack-plugin",
+  "_nodeVersion": "6.9.5",
+  "_npmOperationalInternal": {
+    "host": "packages-12-west.internal.npmjs.com",
+    "tmp": "tmp/globalize-webpack-plugin-0.3.12.tgz_1492180363676_0.6906764605082572"
+  },
+  "_npmUser": {
+    "email": "rxaviers@gmail.com",
+    "name": "rxaviers"
+  },
+  "_npmVersion": "3.9.6",
+  "_phantomChildren": {
+    "source-map": "0.5.6"
+  },
+  "_requested": {
+    "name": "globalize-webpack-plugin",
+    "raw": "globalize-webpack-plugin",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/globalize-webpack-plugin/-/globalize-webpack-plugin-0.3.12.tgz",
+  "_shasum": "76f95fb084cfb27de1c3c84fdd47cb713c027f8c",
+  "_shrinkwrap": null,
+  "_spec": "globalize-webpack-plugin",
+  "_where": "/Users/ataylor/git/justusnode",
+  "author": {
+    "name": "Rafael Xavier de Souza"
+  },
+  "bugs": {
+    "url": "https://github.com/rxaviers/globalize-webpack-plugin/issues"
+  },
+  "dependencies": {
+    "globalize-compiler": "^0.2.0",
+    "skip-amd-webpack-plugin": "0.1.x",
+    "webpack-sources": "^0.1.2"
+  },
   "description": "Globalize.js webpack plugin",
-  "main": "index.js",
-  "scripts": {
-    "test": "jshint *.js"
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-config-defaults": "^9.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git@github.com:jquery-support/globalize-webpack-plugin.git"
+  "directories": {},
+  "dist": {
+    "shasum": "76f95fb084cfb27de1c3c84fdd47cb713c027f8c",
+    "tarball": "https://registry.npmjs.org/globalize-webpack-plugin/-/globalize-webpack-plugin-0.3.12.tgz"
   },
+  "gitHead": "fe65aaaf017c4669ae0ee4e4c77e01a16304fa74",
+  "homepage": "https://github.com/rxaviers/globalize-webpack-plugin",
   "keywords": [
     "globalize",
     "webpack",
     "plugin"
   ],
-  "author": "Rafael Xavier de Souza",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/jquery-support/globalize-webpack-plugin/issues"
-  },
-  "homepage": "https://github.com/jquery-support/globalize-webpack-plugin",
-  "dependencies": {
-    "globalize-compiler": "^0.2.0",
-    "skip-amd-webpack-plugin": "0.0.x",
-    "webpack": "^1.12.13"
-  },
+  "main": "index.js",
+  "maintainers": [
+    {
+      "email": "alunny@gmail.com",
+      "name": "alunny"
+    },
+    {
+      "email": "rxaviers@gmail.com",
+      "name": "rxaviers"
+    }
+  ],
+  "name": "globalize-webpack-plugin",
+  "optionalDependencies": {},
   "peerDependencies": {
     "cldr-data": ">=25",
-    "globalize": "^1.1.0-rc.5",
-    "webpack": "^1.9.0",
-    "webpack-core": "^0.6.8"
+    "globalize": "^1.1.0-rc.5 <=1.3.0-a",
+    "webpack": "^1.9.0 || ^2.2.0-rc"
   },
-  "devDependencies": {
-    "jshint": "2.6.x"
-  }
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/rxaviers/globalize-webpack-plugin.git"
+  },
+  "scripts": {
+    "test": "eslint *js"
+  },
+  "version": "0.3.12"
 }
