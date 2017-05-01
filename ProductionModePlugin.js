@@ -214,9 +214,11 @@ ProductionModePlugin.prototype.apply = function(compiler) {
             // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
             aux = request.split(/[\/\\]/);
             aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
+            var moduleId = module.id;
+            if (typeof moduleId === 'string') {
+              moduleId = JSON.stringify(moduleId);
+            }
 
-            // some webpack plugins, like HashedModuleIds, may transform module.id into strings
-            const moduleId = Number.isInteger(module.id) ? module.id : JSON.stringify(module.id);
             globalizeModuleIds.push(moduleId);
             globalizeModuleIdsMap[aux] = moduleId;
           }
@@ -229,18 +231,8 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         var locale = chunk.name.replace("globalize-compiled-data-", "");
         chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
           var isFirst = true;
-          // This regex handles output from webpack 1 and 2
-          // - webpack 1 looks like: 
-					//   /***/ function(module, exports, __webpack_require__) {
-					//   /***/   ... 
- 					//   /***/ }
-          // - webpack 2 is wrapped in parenthesis and looks like 
-					//   /***/ (function(module, exports, __webpack_require__) {
-					//   /***/   ... 
- 					//   /***/ }),
-					// See https://github.com/rxaviers/globalize-webpack-plugin/issues/38
-          var moduleRegex = /\n\/\*\*\*\/ (\()function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })(\),)/g;
-          var source = compilation.assets[file].source().replace(moduleRegex, function(garbage1, openParen, garbage2, fnTail, closeParen) {
+          // Match either webpack 1.x or webpack 2.x
+          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ \(?function\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, garbage2, fnTail) {
             var fnContent;
 
             // Define the initial module 0 as the whole formatters and parsers.
@@ -257,10 +249,15 @@ ProductionModePlugin.prototype.apply = function(compiler) {
               fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
             }
 
-            openParen = openParen || '';
-            closeParen = closeParen || '';
+            // Hack to support webpack 1.x and 2.x.
+            // webpack 2.x
+            if (NormalModuleFactory.prototype.createParser) {
+              return "\n/***/ (function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
 
-            return "\n/***/ " + openParen + "function(module, exports, __webpack_require__) {\n" + fnContent + fnTail + closeParen;
+            // webpack 1.x
+            } else {
+              return "\n/***/ function(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+            }
           });
           compilation.assets[file] = new ConcatSource(source);
         });

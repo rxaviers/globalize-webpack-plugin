@@ -10,7 +10,7 @@ var isGlobalizeModule = function(filepath) {
   // 1: path should contain "globalize",
   // 2: and it should appear either in the end (e.g., ../globalize) or right
   // before it (e.g., ../globalize/date).
-  return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */;
+  return i !== -1 /* 1 */ && filepath.length - i <= 2 /* 2 */; // eslint-disable-line semi-spacing
 };
 
 module.exports = {

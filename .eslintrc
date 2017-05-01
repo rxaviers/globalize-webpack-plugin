@@ -1,0 +1,21 @@
+{
+  "env": {
+    "browser": true,
+    "es6": true,
+    "mocha": true,
+    "node": true
+  },
+  "extends": [
+    "defaults"
+  ],
+  "globals": {
+    "expect": true
+  },
+  "rules": {
+    "no-console": 0,
+    "no-trailing-spaces": 1,
+    "quotes": ["warn", "double"],
+    "semi": "warn",
+    "indent": ["warn", 2]
+  }
+}
