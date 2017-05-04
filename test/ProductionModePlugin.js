@@ -54,7 +54,7 @@ describe("Globalize Webpack Plugin", function() {
       });
 
       it("should extract formatters and parsers from basic code", function() {
-        return expect(promisefiedWebpack(webpackConfig)).to.eventually.be.fulfilled.then(function(stats) {
+        return expect(promisefiedWebpack(webpackConfig)).to.eventually.be.fulfilled.then(function() {
           var outputFilepath = path.join(OUTPUT_PATH, "en.js");
           var outputFileExists = fs.existsSync(outputFilepath);
           expect(outputFileExists).to.be.true;

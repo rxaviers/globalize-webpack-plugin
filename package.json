@@ -4,7 +4,7 @@
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
-    "test": "eslint *js && mocha test"
+    "test": "eslint *js test/*js && mocha test"
   },
   "repository": {
     "type": "git",
