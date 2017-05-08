@@ -11,11 +11,15 @@
   "globals": {
     "expect": true
   },
+  "plugins": [
+    "sort-requires"
+  ],
   "rules": {
-    "no-console": 0,
-    "no-trailing-spaces": 1,
+    "indent": ["warn", 2],
+    "no-console": "off",
+    "no-trailing-spaces": "warn",
     "quotes": ["warn", "double"],
     "semi": "warn",
-    "indent": ["warn", 2]
+    "sort-requires/sort-requires": "warn"
   }
 }

@@ -1,6 +1,6 @@
-var GlobalizePlugin = require("../index");
 var expect = require("chai").expect;
 var fs = require("fs");
+var GlobalizePlugin = require("../index");
 var mkdirp = require("mkdirp");
 var path = require("path");
 var rimraf = require("rimraf");
@@ -29,16 +29,15 @@ function mkWebpackConfig(key) {
       new GlobalizePlugin({
         production: true,
         developmentLocale: "en",
-        supportedLocales: ["en"],
+        supportedLocales: ["en", "es"],
         messages: path.join(__dirname, "fixtures/translations/[locale].json"),
         output: "[locale].js"
       }),
-      // new webpack.NamedModulesPlugin(),
       new webpack.optimize.CommonsChunkPlugin({
         name: "vendor",
         filename: "vendor.js",
         minChunks: function(module) {
-          const nodeModules = path.resolve(__dirname, "../node_modules");
+          var nodeModules = path.resolve(__dirname, "../node_modules");
           return module.request && module.request.startsWith(nodeModules);
         }
       }),
@@ -106,7 +105,7 @@ describe("Globalize Webpack Plugin", function() {
             require(outputPath(key, "en"));
             require(outputPath(key, "app"));
 
-            const globalizeModuleStats = compileStats.toJson().modules.find(function (module) {
+            var globalizeModuleStats = compileStats.toJson().modules.find(function (module) {
               return module.name === "./~/globalize/dist/globalize-runtime.js";
             });
 
@@ -116,6 +115,19 @@ describe("Globalize Webpack Plugin", function() {
           after(function() {
             delete global.window;
             delete global.webpackJsonp;
+          });
+
+          it("should render locale chunk with correct entry module", function() {
+            var enFilePath = outputPath(key, "en.js");
+            var enContent = fs.readFileSync(enFilePath).toString();
+            var enChunkLastLine = enContent.split(/\n/).pop();
+
+            var statsJson = compileStats.toJson();
+            var compiledDataModuleStats = statsJson.modules.find(function (module) {
+              return module.source && module.source.match(/Globalize.locale\("en"\); return Globalize;/);
+            });
+
+            expect(enChunkLastLine).to.contain(compiledDataModuleStats.id);
           });
 
           it("should include formatDate", function() {

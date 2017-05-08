@@ -1,0 +1,12 @@
+{
+  "es": {
+    "like": [
+      "{0, plural, offset:1",
+      "     =0 {Sé el primero en recibir esto}",
+      "     =1 {Te gustó esto}",
+      "    one {A ti ya alguien más le gustó esto}",
+      "  other {A ti ya # otros les gustó esto}",
+      "}"
+    ]
+  }
+}
