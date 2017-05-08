@@ -40,7 +40,8 @@ GlobalizeCompilerHelper.prototype.createCompiledDataModule = function(request) {
 };
 
 GlobalizeCompilerHelper.prototype.getModuleFilepath = function(request) {
-  return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[\/\\?" :]/g, "-"));
+  // Always append .js to the file path to cater for non-JS files (e.g. .coffee).
+  return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[\/\\?" :\.]/g, "-") + ".js");
 };
 
 GlobalizeCompilerHelper.prototype.compile = function(locale, request) {
