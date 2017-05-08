@@ -1,5 +1,5 @@
-var ProductionModePlugin = require("./ProductionModePlugin");
 var DevelopmentModePlugin = require("./DevelopmentModePlugin");
+var ProductionModePlugin = require("./ProductionModePlugin");
 
 /**
  * Development Mode:

@@ -1,10 +1,8 @@
 var CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
-var ConcatSource = require("webpack-sources").ConcatSource;
 var GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
-var ModuleFilenameHelpers = require("webpack/lib/ModuleFilenameHelpers");
 var MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
-var NormalModuleFactory = require("webpack/lib/NormalModuleFactory");
 var NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
+var RawModule = require("webpack/lib/RawModule");
 var SkipAMDPlugin = require("skip-amd-webpack-plugin");
 var util = require("./util");
 
@@ -158,14 +156,14 @@ ProductionModePlugin.prototype.apply = function(compiler) {
       }
     });
 
-    // Have each globalize-compiled-data chunks to include precompiled data for
-    // each supportedLocales. On each chunk, merge all the precompiled modules
+    // Have each globalize-compiled-data chunks include precompiled data for
+    // each supported locale. In each chunk, merge all the precompiled modules
     // into a single one. Finally, allow the chunks to be loaded incrementally
     // (not mutually exclusively). Details below.
     //
     // Up to this step, all globalize-compiled-data chunks include several
     // precompiled modules, which have been mandatory to allow webpack to figure
-    // out the Globalize runtime dependencies. But, for the final chunk we need
+    // out the Globalize runtime dependencies. But for the final chunk we need
     // something a little different:
     //
     // a) Instead of including several individual precompiled modules, it's
@@ -191,27 +189,21 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     //    defining the formatters and parsers for its individual parents, we
     //    actually simplify them by returning Globalize only. The precompiled
     //    content for the whole set of formatters and parsers are going to be
-    //    included in the id numbered 0 of these chunks. The id 0 has a special
-    //    meaning in webpack, it means it's going to be executed as soon as it's
-    //    loaded. So, we accomplish what we need: have the data loaded as soon
-    //    as the chunk is loaded, which means it will be available when each
+    //    included in the entry module of each of these chunks.
+    //    So, we accomplish what we need: have the data loaded as soon as the
+    //    chunk is loaded, which means it will be available when each
     //    individual parent code needs it.
-    //
-    // OBS: `additional-chunk-assets` is used to make globalize-compiled-data
-    // changes right before `optimize-chunk-assets` (used by plugins like
-    // Uglify).
-    //
-    // TODO: Can we do this differently than using regexps?
-    compilation.plugin("additional-chunk-assets", function(chunks) {
+    compilation.plugin("after-optimize-module-ids", function() {
       var globalizeModuleIds = [];
       var globalizeModuleIdsMap = {};
 
-      chunks.forEach(function(chunk) {
+      this.chunks.forEach(function(chunk) {
         chunk.modules.forEach(function(module) {
           var aux;
           var request = module.request;
           if (request && util.isGlobalizeRuntimeModule(request)) {
-            // While request has the full pathname, aux has something like "globalize/dist/globalize-runtime/date".
+            // While request has the full pathname, aux has something like
+            // "globalize/dist/globalize-runtime/date".
             aux = request.split(/[\/\\]/);
             aux = aux.slice(aux.lastIndexOf("globalize")).join("/").replace(/\.js$/, "");
 
@@ -228,36 +220,71 @@ ProductionModePlugin.prototype.apply = function(compiler) {
         });
       });
 
-      chunks.filter(function(chunk) {
-        return /globalize-compiled-data/.test(chunk.name);
-      }).forEach(function(chunk) {
-        var locale = chunk.name.replace("globalize-compiled-data-", "");
-        chunk.files.filter(ModuleFilenameHelpers.matchObject).forEach(function(file) {
-          var isFirst = true;
-          // Match either webpack 1.x or webpack 2.x
-          var source = compilation.assets[file].source().replace(/\n\/\*\*\*\/ (\(?function)\(module, exports(, __webpack_require__)?\) {[\s\S]*?(\n\/\*\*\*\/ })/g, function(garbage1, fnHead, garbage2, fnTail) {
-            var fnContent;
+      // rewrite the modules in the localized chunks:
+      //   - entry module will contain the compiled formatters and parsers
+      //   - non-entry modules will be rewritten to export globalize
+      this.chunks
+        .filter(function(chunk) {
+          return /globalize-compiled-data/.test(chunk.name);
+        })
+        .forEach(function(chunk) {
+          // remove dead entry module for these reasons
+          //   - because the module has no dependencies, it won't be rendered
+          //     with __webpack_require__, making it difficult to modify its
+          //     source in a way that can import globalize
+          //
+          //   - it was a placeholder MultiModule that held no content, created
+          //     when we added a MultiEntryPlugin
+          //
+          //   - the true entry module should be globalize-compiled-data
+          //     module, which has been created as a NormalModule
+          chunk.removeModule(chunk.entryModule);
+          chunk.entryModule = chunk.modules.find(function(module) {
+            return module.context.endsWith(".tmp-globalize-webpack");
+          });
 
-            // Define the initial module 0 as the whole formatters and parsers.
-            if (isFirst) {
-              isFirst = false;
+          var newModules = chunk.modules.map(function(module) {
+            var fnContent;
+            if (module === chunk.entryModule) {
+              // rewrite entry module to contain the globalize-compiled-data
+              var locale = chunk.name.replace("globalize-compiled-data-", "");
               fnContent = globalizeCompilerHelper.compile(locale)
                 .replace("typeof define === \"function\" && define.amd", "false")
                 .replace(/require\("([^)]+)"\)/g, function(garbage, moduleName) {
                   return "__webpack_require__(" + globalizeModuleIdsMap[moduleName] + ")";
                 });
-
-            // Define all other individual globalize compiled data as a simple exports to Globalize.
             } else {
+              // rewrite all other modules in this chunk as proxies for
+              // Globalize
               fnContent = "module.exports = __webpack_require__(" + globalizeModuleIds[0] + ");";
             }
 
-            return "\n/***/ " + fnHead + "(module, exports, __webpack_require__) {\n" + fnContent + fnTail;
+            // The `module` object in scope here is in each locale chunk, and
+            // any modifications we make will be rendered into every locale
+            // chunk. Create a new module to contain the locale-specific source
+            // modifications we've made.
+            var newModule = new RawModule(fnContent);
+            newModule.context = module.context;
+            newModule.id = module.id;
+            newModule.dependencies = module.dependencies;
+            return newModule;
           });
-          compilation.assets[file] = new ConcatSource(source);
+
+          // remove old modules with modified clones
+          // chunk.removeModule doesn't always find the module to remove
+          // ¯\_(ツ)_/¯, so we have to be be a bit more thorough here.
+          chunk.modules.forEach(function(module) {
+            module.removeChunk(chunk);
+          });
+          chunk.modules = [];
+
+          // install the rewritten modules
+          newModules.forEach(function(module) {
+            chunk.addModule(module);
+          });
         });
-      });
     });
+
 
     // Set the right chunks order. The globalize-compiled-data chunks must
     // appear after globalize runtime modules, but before any app code.
@@ -286,17 +313,9 @@ ProductionModePlugin.prototype.apply = function(compiler) {
     });
   });
 
-  // Hack to support webpack 1.x and 2.x.
-  // webpack 2.x
-  if (NormalModuleFactory.prototype.createParser) {
-    compiler.plugin("compilation", function(compilation, params) {
-      params.normalModuleFactory.plugin("parser", bindParser);
-    });
-
-  // webpack 1.x
-  } else {
-    bindParser(compiler.parser);
-  }
+  compiler.plugin("compilation", function(compilation, params) {
+    params.normalModuleFactory.plugin("parser", bindParser);
+  });
 };
 
 module.exports = ProductionModePlugin;
