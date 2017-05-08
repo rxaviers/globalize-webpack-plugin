@@ -218,7 +218,7 @@ ProductionModePlugin.prototype.apply = function(compiler) {
             // some plugins, like HashedModuleIdsPlugin, may change module ids
             // into strings.
             var moduleId = module.id;
-            if (typeof moduleId === 'string') {
+            if (typeof moduleId === "string") {
               moduleId = JSON.stringify(moduleId);
             }
 
