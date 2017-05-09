@@ -4,7 +4,7 @@
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
   "scripts": {
-    "test": "eslint *js && mocha test"
+    "test": "eslint *js test && mocha test"
   },
   "repository": {
     "type": "git",
@@ -38,6 +38,7 @@
     "eslint": "^3.19.0",
     "eslint-config-defaults": "^9.0.0",
     "globalize": "^1.2.3",
+    "mkdirp": "^0.5.1",
     "mocha": "^3.3.0",
     "path-chunk-webpack-plugin": "^1.2.0",
     "rimraf": "^2.6.1",
