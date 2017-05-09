@@ -1,6 +1,5 @@
 var expect = require("chai").expect;
 var GlobalizePlugin = require("../index");
-var PathChunkPlugin = require("path-chunk-webpack-plugin");
 var path = require("path");
 var webpack = require("webpack");
 var rimraf = require("rimraf");
@@ -24,10 +23,19 @@ var webpackConfig = {
       messages: path.join(__dirname, "fixtures/translations/[locale].json"),
       output: "[locale].js"
     }),
-    // new webpack.optimize.DedupePlugin(),
-    new PathChunkPlugin({
-      name: "vendor",
-      test: "node_modules/"
+    // new webpack.NamedModulesPlugin(),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'vendor',
+      filename: 'vendor.js',
+      minChunks: function(module, count) {
+        const nodeModules = path.resolve(__dirname, "../node_modules");
+        return module.request && module.request.startsWith(nodeModules);
+      }
+    }),
+    new webpack.optimize.CommonsChunkPlugin({
+      name: 'runtime',
+      filename: 'runtime.js',
+      minChunks: Infinity,
     })
   ]
 };
@@ -69,13 +77,15 @@ describe("Globalize Webpack Plugin", function() {
         before(function() {
           global.window = global;
           // Hack: Expose __webpack_require__.
-          var appFilepath = path.join(__dirname, "./output/app.js");
-          var appContent = fs.readFileSync(appFilepath).toString();
-          fs.writeFileSync(appFilepath, appContent.replace(/(function __webpack_require__\(moduleId\) {)/, "window.__webpack_require__ = $1"));
+          var runtimeFilePath = path.join(__dirname, "./output/runtime.js");
+          var runtimeContent = fs.readFileSync(runtimeFilePath).toString();
+          fs.writeFileSync(runtimeFilePath, runtimeContent.replace(/(function __webpack_require__\(moduleId\) {)/, "window.__webpack_require__ = $1"));
 
           // Hack2: Load compiled Globalize
-          require("./output/app");
+          require("./output/runtime");
+          require("./output/vendor");
           require("./output/en");
+          require("./output/app");
           Globalize = global.__webpack_require__(1);
 
           Globalize.locale("en");

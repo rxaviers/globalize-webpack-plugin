@@ -41,7 +41,7 @@
     "mocha": "^3.3.0",
     "path-chunk-webpack-plugin": "^1.2.0",
     "rimraf": "^2.6.1",
-    "webpack": "^1.15.0"
+    "webpack": "^2.5.1"
   },
   "cldr-data-urls-filter": "(core|dates|numbers|units)"
 }
