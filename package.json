@@ -3,6 +3,10 @@
   "version": "0.3.12",
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
+  "files": [
+    "*.js",
+    "DCO.md"
+  ],
   "scripts": {
     "test": "mocha test",
     "test:debug": "node ./node_modules/.bin/mocha --inspect --debug-brk test",
