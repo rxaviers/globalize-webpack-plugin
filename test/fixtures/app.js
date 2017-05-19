@@ -1,5 +1,7 @@
-var like;
-var Globalize = require( "globalize" );
+"use strict";
+
+const Globalize = require( "globalize" );
+let like;
 
 // Use Globalize to format dates.
 Globalize.formatDate( new Date(), { datetime: "medium" } );

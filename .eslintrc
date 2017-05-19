@@ -18,8 +18,10 @@
     "indent": ["warn", 2],
     "no-console": "off",
     "no-trailing-spaces": "warn",
+    "no-var": "error",
     "quotes": ["warn", "double"],
     "semi": "warn",
-    "sort-requires/sort-requires": "warn"
+    "sort-requires/sort-requires": "warn",
+    "strict": ["error", "global"]
   }
 }

@@ -1,5 +1,7 @@
-var DevelopmentModePlugin = require("./DevelopmentModePlugin");
-var ProductionModePlugin = require("./ProductionModePlugin");
+"use strict";
+
+const DevelopmentModePlugin = require("./DevelopmentModePlugin");
+const ProductionModePlugin = require("./ProductionModePlugin");
 
 /**
  * Development Mode:
@@ -11,16 +13,18 @@ var ProductionModePlugin = require("./ProductionModePlugin");
  * - Statically extracts formatters and parsers from user code and pre-compile
  *   them into respective XXXX.
  */
-function GlobalizePlugin(attributes) {
-  this.attributes = attributes || {};
-}
+class GlobalizePlugin {
+  constructor(attributes) {
+    this.attributes = attributes || {};
+  }
 
-GlobalizePlugin.prototype.apply = function(compiler) {
-  compiler.apply(
-    this.attributes.production ?
-    new ProductionModePlugin(this.attributes) :
-    new DevelopmentModePlugin(this.attributes)
-  );
-};
+  apply(compiler) {
+    compiler.apply(
+      this.attributes.production ?
+      new ProductionModePlugin(this.attributes) :
+      new DevelopmentModePlugin(this.attributes)
+    );
+  }
+}
 
 module.exports = GlobalizePlugin;
