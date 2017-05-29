@@ -15,7 +15,8 @@ class DevelopmentModePlugin {
   constructor(attributes) {
     let i18nDataTemplate, messages;
     const cldr = attributes.cldr || util.cldr;
-    const tmpdir = util.tmpdir();
+    const tmpdirBase = attributes.tmpdirBase || ".";
+    const tmpdir = util.tmpdir(tmpdirBase);
 
     messages = attributes.messages && util.readMessages(attributes.messages, attributes.developmentLocale);
 
