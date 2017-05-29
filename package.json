@@ -38,7 +38,7 @@
   "peerDependencies": {
     "cldr-data": ">=25",
     "globalize": "^1.1.0-rc.5 <1.3.0",
-    "webpack": "^2.2.0-rc"
+    "webpack": "^2.5.1"
   },
   "devDependencies": {
     "chai": "^3.5.0",
