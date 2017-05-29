@@ -57,7 +57,7 @@ module.exports = {
   },
 
   tmpdir: (base) => {
-    const tmpdir = path.resolve(base + "/.tmp-globalize-webpack");
+    const tmpdir = path.resolve(path.join(base, ".tmp-globalize-webpack"));
     if (!fs.existsSync(tmpdir)) {
       fs.mkdirSync(tmpdir);
     } else {
