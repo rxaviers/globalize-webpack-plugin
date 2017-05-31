@@ -9,12 +9,19 @@ const rimraf = require("rimraf");
 const webpack = require("webpack");
 
 const TEST_CASES = {
+  /*
+    tempdir should be first so that the top-level temp directory
+    created for the latter cases doesn't interfere.
+  */
+  tempdir: [],
   default: [],
   named: [ new webpack.NamedModulesPlugin() ],
   hashed: [ new webpack.HashedModuleIdsPlugin() ]
 };
 
 const outputPath = (key, file) => path.join(__dirname, "../_test-output", key, file || "");
+
+const tmpdirBase = (key) => key === "tempdir" ? {tmpdirBase: outputPath(key)} : {};
 
 const mkWebpackConfig = (key) => ({
   entry: {
@@ -25,13 +32,18 @@ const mkWebpackConfig = (key) => ({
     filename: "app.js"
   },
   plugins: TEST_CASES[key].concat([
-    new GlobalizePlugin({
-      production: true,
-      developmentLocale: "en",
-      supportedLocales: ["en", "es"],
-      messages: path.join(__dirname, "fixtures/translations/[locale].json"),
-      output: "[locale].js"
-    }),
+    new GlobalizePlugin(
+      Object.assign(
+        {
+          production: true,
+          developmentLocale: "en",
+          supportedLocales: ["en", "es"],
+          messages: path.join(__dirname, "fixtures/translations/[locale].json"),
+          output: "[locale].js"
+        },
+        tmpdirBase(key)
+      )
+    ),
     new webpack.optimize.CommonsChunkPlugin({
       name: "vendor",
       filename: "vendor.js",

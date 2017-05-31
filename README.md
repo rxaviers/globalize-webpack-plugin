@@ -38,7 +38,8 @@ new globalizePlugin({
 	supportedLocales: [ "en", "es", "zh", ... ], // locales that should be built support for.
 	messages: "messages/[locale].json", // messages (optional)
 	output: "globalize-compiled-data-[locale].[hash].js", // build output.
-	moduleFilter: filterFunction // filter for modules to exclude from processing
+	moduleFilter: filterFunction, // filter for modules to exclude from processing
+	tempdirBase: ".", // optional for non create-react-apps
 })
 ```
 
@@ -53,6 +54,8 @@ new globalizePlugin({
 *output* is the name scheme of the built files.
 
 *moduleFilter* is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
+
+*tmpdirBase* tells the plugin where to create its temporary files ; it should be set it to `paths.appSrc` in ejected [create-react-app](https://github.com/facebookincubator/create-react-app)s to comply with its ModuleScopePlugin.
 
 ## Example
 

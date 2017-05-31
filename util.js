@@ -56,8 +56,8 @@ module.exports = {
     return JSON.parse(fs.readFileSync(messagesFilepath));
   },
 
-  tmpdir: () => {
-    const tmpdir = path.resolve("./.tmp-globalize-webpack");
+  tmpdir: (base) => {
+    const tmpdir = path.resolve(path.join(base, ".tmp-globalize-webpack"));
     if (!fs.existsSync(tmpdir)) {
       fs.mkdirSync(tmpdir);
     } else {
