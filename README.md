@@ -55,7 +55,7 @@ new globalizePlugin({
 
 *moduleFilter* is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
 
-*tmpdirBase* tells the plugin where to create its temporary files ; it should be set it to `paths.appSrc` in ejected [create-react-app](https://github.com/facebookincubator/create-react-app)s to comply with its ModuleScopePlugin.
+*tmpdirBase* tells the plugin where to create its temporary files. It should be set it to `paths.appSrc` in ejected [create-react-app](https://github.com/facebookincubator/create-react-app)s to comply with its ModuleScopePlugin.
 
 ## Example
 
