@@ -69,34 +69,41 @@ class ProductionModePlugin {
         if(param.isString() && param.string === "globalize" && this.moduleFilter(request) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
 
-          // Statically extract Globalize formatters and parsers from the request
-          // file only. Then, create a custom precompiled formatters/parsers module
-          // that will be called instead of Globalize, which in turn requires
-          // Globalize, set the default locale and then exports the Globalize
-          // object.
-          const compiledDataFilepath = globalizeCompilerHelper.createCompiledDataModule(request);
+          // Extract Globalize formatters and parsers for all the locales. Webpack
+          // allocates distinct moduleIds per locale, enabling multiple locales to
+          // be used at the same time.
+          this.supportedLocales.forEach((locale) => {
+            // Statically extract Globalize formatters and parsers from the request
+            // file only. Then, create a custom precompiled formatters/parsers module
+            // that will be called instead of Globalize, which in turn requires
+            // Globalize, set the default locale and then exports the Globalize
+            // object.
+            const compiledDataFilepath = globalizeCompilerHelper.createCompiledDataModule(request, locale);
 
-          // Skip the AMD part of the custom precompiled formatters/parsers UMD
-          // wrapper.
-          //
-          // Note: We're hacking an already created SkipAMDPlugin instance instead
-          // of using a regular code like the below in order to take advantage of
-          // its position in the plugins list. Otherwise, it'd be too late to plugin
-          // and AMD would no longer be skipped at this point.
-          //
-          // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
-          //
-          // 1: Removes the leading and the trailing `/` from the regexp string.
-          globalizeSkipAMDPlugin.requestRegExp = new RegExp([
-            globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
-            util.escapeRegex(compiledDataFilepath)
-          ].join("|"));
+            // Skip the AMD part of the custom precompiled formatters/parsers UMD
+            // wrapper.
+            //
+            // Note: We're hacking an already created SkipAMDPlugin instance instead
+            // of using a regular code like the below in order to take advantage of
+            // its position in the plugins list. Otherwise, it'd be too late to plugin
+            // and AMD would no longer be skipped at this point.
+            //
+            // compiler.apply(new SkipAMDPlugin(new RegExp(compiledDataFilepath));
+            //
+            // 1: Removes the leading and the trailing `/` from the regexp string.
+            globalizeSkipAMDPlugin.requestRegExp = new RegExp([
+              globalizeSkipAMDPlugin.requestRegExp.toString().slice(1, -1)/* 1 */,
+              util.escapeRegex(compiledDataFilepath)
+            ].join("|"));
 
-          // Replace require("globalize") with require(<custom precompiled module>).
-          const dep = new CommonJsRequireDependency(compiledDataFilepath, param.range);
-          dep.loc = expr.loc;
-          dep.optional = !!parser.scope.inTry;
-          parser.state.current.addDependency(dep);
+            // Add localized Globalize formatters and parsers as dependencies
+            // Replace require("globalize") with require(<custom precompiled module of
+            // developmentLocale>).
+            const dep = new CommonJsRequireDependency(compiledDataFilepath, locale == this.developmentLocale ? param.range : null);
+            dep.loc = expr.loc;
+            dep.optional = !!parser.scope.inTry;
+            parser.state.current.addDependency(dep);
+          });
 
           return true;
         }
@@ -112,11 +119,6 @@ class ProductionModePlugin {
 
     // Place the Globalize compiled data modules into the globalize-compiled-data
     // chunks.
-    //
-    // Note that, at this point, all compiled data have been compiled for
-    // developmentLocale. All globalize-compiled-data chunks will equally include all
-    // precompiled modules for the developmentLocale instead of their respective
-    // locales. This will get fixed in the subsquent step.
     let allModules;
     compiler.plugin("this-compilation", (compilation) => {
       compilation.plugin("optimize-modules", (modules) => {
@@ -127,7 +129,10 @@ class ProductionModePlugin {
     compiler.plugin("this-compilation", (compilation) => {
       compilation.plugin("after-optimize-chunks", (chunks) => {
         let hasAnyModuleBeenIncluded;
-        const compiledDataChunks = chunks.filter((chunk) => /globalize-compiled-data/.test(chunk.name));
+        const compiledDataChunks = new Map(
+          chunks.filter((chunk) => /globalize-compiled-data/.test(chunk.name)).
+                 map(chunk => [chunk.name.replace("globalize-compiled-data-", ""), chunk] )
+        );
 
         allModules.forEach((module) => {
           let chunkRemoved, chunk;
@@ -140,16 +145,17 @@ class ProductionModePlugin {
                 throw new Error("Failed to remove chunk " + chunk.id + " for module " + module.request);
               }
             }
-            compiledDataChunks.forEach((compiledDataChunk) => {
-              compiledDataChunk.addModule(module);
-              module.addChunk(compiledDataChunk);
-            });
+            for (let [locale, chunk] of compiledDataChunks.entries()) {
+              if (module.request.endsWith(locale + ".js")) {
+                chunk.addModule(module);
+                module.addChunk(chunk);
+              }
+            }
           }
         });
-        compiledDataChunks.forEach((chunk) => {
-          const locale = chunk.name.replace("globalize-compiled-data-", "");
+        for (let [locale, chunk] of compiledDataChunks.entries()) {
           chunk.filenameTemplate = output.replace("[locale]", locale);
-        });
+        }
         if(!hasAnyModuleBeenIncluded) {
           console.warn("No Globalize compiled data module found");
         }

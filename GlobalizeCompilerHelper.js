@@ -34,18 +34,18 @@ class GlobalizeCompilerHelper {
     return this.extractsMap[request];
   }
 
-  createCompiledDataModule(request) {
-    const filepath = this.getModuleFilepath(request);
+  createCompiledDataModule(request, locale) {
+    const filepath = this.getModuleFilepath(request, locale);
     this.modules[filepath] = true;
 
-    fs.writeFileSync(filepath, this.compile(this.developmentLocale, request));
+    fs.writeFileSync(filepath, this.compile(locale, request));
 
     return filepath;
   }
 
-  getModuleFilepath(request) {
+  getModuleFilepath(request, locale) {
     // Always append .js to the file path to cater for non-JS files (e.g. .coffee).
-    return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[\/\\?" :\.]/g, "-") + ".js");
+    return path.join(this.tmpdir, request.replace(/.*!/, "").replace(/[\/\\?" :\.]/g, "-") + "-" + locale + ".js");
   }
 
   compile(locale, request) {
