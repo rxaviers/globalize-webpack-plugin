@@ -128,7 +128,7 @@ class ProductionModePlugin {
         const compiledDataChunks = chunks.filter((chunk) => /globalize-compiled-data/.test(chunk.name));
 
         allModules.forEach((module) => {
-          let chunkRemoved, chunk;
+          let chunkRemoved;
           if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
             hasAnyModuleBeenIncluded = true;
             module.getChunks().forEach((chunk) => {
