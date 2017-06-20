@@ -128,16 +128,15 @@ class ProductionModePlugin {
         const compiledDataChunks = chunks.filter((chunk) => /globalize-compiled-data/.test(chunk.name));
 
         allModules.forEach((module) => {
-          let chunkRemoved, chunk;
+          let chunkRemoved;
           if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
             hasAnyModuleBeenIncluded = true;
-            while (module.chunks.length) {
-              chunk = module.chunks[0];
+            module.getChunks().forEach((chunk) => {
               chunkRemoved = module.removeChunk(chunk);
               if (!chunkRemoved) {
                 throw new Error("Failed to remove chunk " + chunk.id + " for module " + module.request);
               }
-            }
+            });
             compiledDataChunks.forEach((compiledDataChunk) => {
               compiledDataChunk.addModule(module);
               module.addChunk(compiledDataChunk);
