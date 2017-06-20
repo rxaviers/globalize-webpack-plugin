@@ -135,16 +135,15 @@ class ProductionModePlugin {
         );
 
         allModules.forEach((module) => {
-          let chunkRemoved, chunk;
+          let chunkRemoved;
           if (globalizeCompilerHelper.isCompiledDataModule(module.request)) {
             hasAnyModuleBeenIncluded = true;
-            while (module.chunks.length) {
-              chunk = module.chunks[0];
+            module.getChunks().forEach((chunk) => {
               chunkRemoved = module.removeChunk(chunk);
               if (!chunkRemoved) {
                 throw new Error("Failed to remove chunk " + chunk.id + " for module " + module.request);
               }
-            }
+            });
             for (let [locale, chunk] of compiledDataChunks.entries()) {
               if (module.request.endsWith(locale + ".js")) {
                 chunk.addModule(module);
