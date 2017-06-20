@@ -67,6 +67,9 @@ class ProductionModePlugin {
         if(param.isString() && param.string === "globalize" && this.moduleFilter(request) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
 
+          // Extract Globalize formatters and parsers for all the locales. Webpack
+          // allocates distinct moduleIds per locale, enabling multiple locales to
+          // be used at the same time.
           this.supportedLocales.forEach((locale) => {
             // Statically extract Globalize formatters and parsers from the request
             // file only. Then, create a custom precompiled formatters/parsers module
@@ -92,7 +95,8 @@ class ProductionModePlugin {
             ].join("|"));
 
             // Add localized Globalize formatters and parsers as dependencies
-            // Replace require("globalize") with require(<custom precompiled module of developmentLocale>).
+            // Replace require("globalize") with require(<custom precompiled module of
+            // developmentLocale>).
             const dep = new CommonJsRequireDependency(compiledDataFilepath, locale == this.developmentLocale ? param.range : null);
             dep.loc = expr.loc;
             dep.optional = !!parser.scope.inTry;
