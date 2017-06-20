@@ -96,7 +96,7 @@ function commonTests(testName, webpackConfig, outputPath) {
       require(mkOutputPath(testName, "app"));
 
       const globalizeModuleStats = compileStats.toJson().modules.find((module) => {
-        return module.name === "./~/globalize/dist/globalize-runtime.js";
+        return module.name === "./node_modules/globalize/dist/globalize-runtime.js";
       });
 
       Globalize = global.__webpack_require__(globalizeModuleStats.id);
