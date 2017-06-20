@@ -25,7 +25,8 @@ class ProductionModePlugin {
     this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
     this.supportedLocales = attributes.supportedLocales;
     this.output = attributes.output;
-    this.tmpdir = util.tmpdir();
+    const tmpdirBase = attributes.tmpdirBase || ".";
+    this.tmpdir = util.tmpdir(tmpdirBase);
   }
 
   apply(compiler) {
