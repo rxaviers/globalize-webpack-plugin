@@ -125,7 +125,7 @@ function commonTests(testName, webpackConfig, outputPath) {
     it("should have as many globalize-runtime-data modules as supported locales", () => {
       const statsJson = compileStats.toJson();
       const dataModulesCount = statsJson.modules.reduce((total, module) => {
-        return module.name.startsWith("./.tmp-globalize-webpack") ? total+1 : total;
+        return module.name.startsWith("./.tmp-globalize-webpack/") ? total+1 : total;
       }, 0);
 
       expect(dataModulesCount).to.equal(supportedLocales.length);
