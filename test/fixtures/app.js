@@ -3,6 +3,7 @@ var Globalize = require( "globalize" );
 
 // Use Globalize to format dates.
 console.log( Globalize.formatDate( new Date(), { datetime: "medium" } ) );
+console.log( Globalize.formatDateToParts( new Date(), { date: "long" } ) );
 
 // Use Globalize to format numbers.
 console.log( Globalize.formatNumber( 12345.6789 ) );
