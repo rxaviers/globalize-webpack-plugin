@@ -3,6 +3,10 @@ var Globalize = require( "globalize" );
 
 // Use Globalize to format dates.
 console.log( Globalize.formatDate( new Date(), { datetime: "medium" } ) );
+console.log( Globalize.formatDate( new Date(), {
+  datetime: "full",
+  timeZone: "America/Sao_Paulo"
+}));
 console.log( Globalize.formatDateToParts( new Date(), { date: "long" } ) );
 
 // Use Globalize to format numbers.
@@ -32,3 +36,7 @@ console.log( Globalize.parseNumber( "12345.6789" ) );
 
 // Use Globalize to parse a date.
 console.log( Globalize.parseDate( "1/2/1982" ) );
+console.log( Globalize.parseDate( "January 1, 2000 at 12:00:00 AM EST", {
+  datetime: "long",
+  timeZone: "America/New_York"
+}));
