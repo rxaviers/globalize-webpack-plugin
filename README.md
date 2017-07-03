@@ -36,6 +36,7 @@ new globalizePlugin({
 	production: true/false // true: production, false: development
 	developmentLocale: "en", // locale to be used for development.
 	supportedLocales: [ "en", "es", "zh", ... ], // locales that should be built support for.
+	cldr: function() {}, // CLDR data (optional)
 	messages: "messages/[locale].json", // messages (optional)
 	output: "globalize-compiled-data-[locale].[hash].js", // build output.
 	moduleFilter: filterFunction, // filter for modules to exclude from processing
@@ -49,11 +50,15 @@ new globalizePlugin({
 
 *supportedLocales* tells the plugin which locales to build/produce globalize-compiled-data for.
 
-*messages* tells the plugin where to find messages for a certain locale.
+*cldr* (optional) a *Function* taking one argument: locale, a *String*; returning an *Object* with the CLDR data for the passed locale. Defaults to the entire supplemental data plus the entire main data for the *developmentLocale*. On the development mode, this content is served on runtime. On production mode, this content is used for precompiling the final bundle.
+
+*messages* (optional) tells the plugin where to find messages for a certain locale.
+
+*timeZoneData* (optional) a *Function* that returns an *Object* with IANA time zone data. an *Object* with the IANA time zone data. Defaults to the entire IANA time zone data from [iana-tz-data](https://github.com/rxaviers/iana-tz-data) package. On the development mode, this content is served on runtime. On production mode, this content is used for precompiling the final bundle.
 
 *output* is the name scheme of the built files.
 
-*moduleFilter* is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
+*moduleFilter* (optional) is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
 
 *tmpdirBase* tells the plugin where to create its temporary files. It should be set it to `paths.appSrc` in ejected [create-react-app](https://github.com/facebookincubator/create-react-app)s to comply with its ModuleScopePlugin.
 
