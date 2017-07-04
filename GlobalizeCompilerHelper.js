@@ -14,6 +14,7 @@ class GlobalizeCompilerHelper {
     this.cldr = attributes.cldr;
     this.developmentLocale = attributes.developmentLocale;
     this.messages = attributes.messages || {};
+    this.timeZoneData = attributes.timeZoneData;
     this.tmpdir = attributes.tmpdir;
     this.webpackCompiler = attributes.webpackCompiler;
   }
@@ -53,7 +54,8 @@ class GlobalizeCompilerHelper {
     const attributes = {
       cldr: this.cldr,
       defaultLocale: locale,
-      extracts: request ? this.getExtract(request) : this.extracts
+      extracts: request ? this.getExtract(request) : this.extracts,
+      timeZoneData: this.timeZoneData
     };
 
     if (this.messages[locale]) {

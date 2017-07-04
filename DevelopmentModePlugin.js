@@ -15,6 +15,7 @@ class DevelopmentModePlugin {
   constructor(attributes) {
     let i18nDataTemplate, messages;
     const cldr = attributes.cldr || util.cldr;
+    const timeZoneData = attributes.timeZoneData || util.timeZoneData;
     const tmpdirBase = attributes.tmpdirBase || ".";
     const tmpdir = util.tmpdir(tmpdirBase);
 
@@ -24,7 +25,8 @@ class DevelopmentModePlugin {
       "var Globalize = require(\"globalize\");",
       "",
       `Globalize.load(${JSON.stringify(cldr(attributes.developmentLocale))});`,
-      messages ?  `Globalize.loadMessages(${JSON.stringify(messages)});` : "",
+      messages ? `Globalize.loadMessages(${JSON.stringify(messages)});` : "",
+      `Globalize.loadTimeZone(${JSON.stringify(timeZoneData())});`,
       `Globalize.locale(${JSON.stringify(attributes.developmentLocale)});`,
       "",
       "module.exports = Globalize;"

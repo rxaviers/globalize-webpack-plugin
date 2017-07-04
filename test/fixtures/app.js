@@ -5,6 +5,11 @@ let like;
 
 // Use Globalize to format dates.
 Globalize.formatDate( new Date(), { datetime: "medium" } );
+Globalize.formatDate( new Date(), {
+  datetime: "full",
+  timeZone: "America/Sao_Paulo"
+});
+Globalize.formatDateToParts( new Date(), { date: "long" } );
 
 // Use Globalize to format numbers.
 Globalize.formatNumber( 12345.6789 );
@@ -33,3 +38,7 @@ Globalize.parseNumber( "12345.6789" );
 
 // Use Globalize to parse a date.
 Globalize.parseDate( "1/2/1982" );
+Globalize.parseDate( "January 1, 2000 at 12:00:00 AM EST", {
+  datetime: "long",
+  timeZone: "America/New_York"
+});

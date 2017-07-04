@@ -4,7 +4,7 @@ const CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequ
 const GlobalizeCompilerHelper = require("./GlobalizeCompilerHelper");
 const MultiEntryPlugin = require("webpack/lib/MultiEntryPlugin");
 const NormalModuleReplacementPlugin = require("webpack/lib/NormalModuleReplacementPlugin");
-const RawModule = require("webpack/lib/RawModule");
+const PatchedRawModule = require("./PatchedRawModule");
 const SkipAMDPlugin = require("skip-amd-webpack-plugin");
 const util = require("./util");
 
@@ -25,6 +25,7 @@ class ProductionModePlugin {
     this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
     this.supportedLocales = attributes.supportedLocales;
     this.output = attributes.output;
+    this.timeZoneData = attributes.timeZoneData || util.timeZoneData;
     const tmpdirBase = attributes.tmpdirBase || ".";
     this.tmpdir = util.tmpdir(tmpdirBase);
   }
@@ -36,6 +37,7 @@ class ProductionModePlugin {
       cldr: this.cldr,
       developmentLocale: this.developmentLocale,
       messages: this.messages,
+      timeZoneData: this.timeZoneData,
       tmpdir: this.tmpdir,
       webpackCompiler: compiler
     });
@@ -256,7 +258,7 @@ class ProductionModePlugin {
               // any modifications we make will be rendered into every locale
               // chunk. Create a new module to contain the locale-specific source
               // modifications we've made.
-              const newModule = new RawModule(fnContent);
+              const newModule = new PatchedRawModule(fnContent);
               newModule.context = module.context;
               newModule.id = module.id;
               newModule.dependencies = module.dependencies;

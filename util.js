@@ -2,6 +2,7 @@
 
 const cldrData = require("cldr-data");
 const fs = require("fs");
+const ianaTzData = require("iana-tz-data");
 const path = require("path");
 
 const mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
@@ -20,6 +21,10 @@ module.exports = {
     return cldrData.entireSupplemental().concat(mainFiles.map((mainFile) => {
       return cldrData(path.join("main", locale, mainFile));
     }));
+  },
+
+  timeZoneData: () => {
+    return ianaTzData;
   },
 
   isGlobalizeModule: isGlobalizeModule,
