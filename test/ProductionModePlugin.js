@@ -8,6 +8,8 @@ const path = require("path");
 const rimraf = require("rimraf");
 const webpack = require("webpack");
 
+const supportedLocales = ["en", "es"];
+
 const mkOutputPath = (testName, file) => path.join(__dirname, "../_test-output", testName, file || "");
 
 const mkWebpackConfig = (options) => ({
@@ -24,7 +26,7 @@ const mkWebpackConfig = (options) => ({
         {
           production: true,
           developmentLocale: "en",
-          supportedLocales: ["en", "es"],
+          supportedLocales: supportedLocales,
           messages: path.join(__dirname, "fixtures/translations/[locale].json"),
           output: "[locale].js"
         },
@@ -118,6 +120,15 @@ function commonTests(testName, webpackConfig, outputPath) {
       });
 
       expect(enChunkLastLine).to.contain(compiledDataModuleStats.id);
+    });
+
+    it("should have as many globalize-runtime-data modules as supported locales", () => {
+      const statsJson = compileStats.toJson();
+      const dataModulesCount = statsJson.modules.reduce((total, module) => {
+        return module.name.startsWith("./.tmp-globalize-webpack/") ? total+1 : total;
+      }, 0);
+
+      expect(dataModulesCount).to.equal(supportedLocales.length);
     });
 
     it("should include formatDate", () => {
