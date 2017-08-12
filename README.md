@@ -51,6 +51,7 @@ new globalizePlugin({
 	output: "globalize-compiled-data-[locale].[hash].js", // build output.
 	moduleFilter: filterFunction, // filter for modules to exclude from processing
 	tempdirBase: ".", // optional for non create-react-apps
+	disableCldr: true/false // optional for not automatically loading CLDR in development mode
 })
 ```
 
@@ -71,6 +72,8 @@ new globalizePlugin({
 *moduleFilter* (optional) is a function to test on filepaths, and optionally reject matching files from further processing. See [react-globalize-webpack-plugin](https://github.com/rxaviers/react-globalize-webpack-plugin) for an example usage. Globalize's internal modules are not processed by default.
 
 *tmpdirBase* tells the plugin where to create its temporary files. It should be set it to `paths.appSrc` in ejected [create-react-app](https://github.com/facebookincubator/create-react-app)s to comply with its ModuleScopePlugin.
+
+*disableCldr* (optional) is a boolean that tells the plugin to not automatically load CLDR data in development mode.
 
 ## Example
 
