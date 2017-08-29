@@ -27,14 +27,16 @@ Use *globalize-webpack-plugin* if your application uses [Globalize][] for intern
 
 Starting from *v1.0.0*, only *webpack 2* is supported. If you need support for *webpack 1*, use our *v0.x* releases.
 
-##### Globalize vs. webpack vs. globalize-webpack-plugin versions
+#### Versions dance
 
-| globalize     | webpack | globalize-webpack-plugin |
-| ------------- | ------- | ------------------------ |
-| ^1.1.0 <1.3.0 | ^1.9.0  | 0.3.x                    |
-| ^1.3.0        | ^1.9.0  | 0.4.x                    |
-| ^1.1.0 <1.3.0 | ^2.2.0  | 1.0.x                    |
-| ^1.3.0        | ^2.2.0  | 1.1.x                    |
+globalize-webpack-plugin vs. webpack vs. Globalize versions:
+
+| globalize-webpack-plugin | webpack | globalize     |
+| ------------------------ | ------- | ------------- |
+| 0.3.x                    | ^1.9.0  | ^1.1.0 <1.3.0 |
+| 0.4.x                    | ^1.9.0  | ^1.3.0        |
+| 1.0.x                    | ^2.2.0  | ^1.1.0 <1.3.0 |
+| 1.1.x                    | ^2.2.0  | ^1.3.0        |
 
 ## Usage
 
