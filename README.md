@@ -23,18 +23,17 @@ Use *globalize-webpack-plugin* if your application uses [Globalize][] for intern
 
 **Globalize-compiled-data in separate chunks** is a feature. But, it's also a restriction. In order to use this plugin, you must split your code in at least three chunks: vendor libraries (including globalize), the automatically generated globalize-compiled chunks, and your application code.
 
-#### Webpack 2
+#### Webpack & Globalize versions
 
-Starting from *v1.0.0*, only *webpack 2* is supported. If you need support for *webpack 1*, use our *v0.x* releases.
+Starting from *v2.0.0*, only *webpack 3* is supported. If you need support for *webpack 2*, use our *v1.x* releases. If you need support for *webpack 1*, use our *v0.x* releases.
 
-##### Globalize vs. webpack vs. globalize-webpack-plugin versions
-
-| globalize     | webpack | globalize-webpack-plugin |
-| ------------- | ------- | ------------------------ |
-| ^1.1.0 <1.3.0 | ^1.9.0  | 0.3.x                    |
-| ^1.3.0        | ^1.9.0  | 0.4.x                    |
-| ^1.1.0 <1.3.0 | ^2.2.0  | 1.0.x                    |
-| ^1.3.0        | ^2.2.0  | 1.1.x                    |
+| globalize-webpack-plugin | webpack | globalize     |
+| ------------------------ | ------- | ------------- |
+| 2.x                      | ^3.0.0  | ^1.3.0        |
+| 1.1.x                    | ^2.2.0  | ^1.3.0        |
+| 1.0.x                    | ^2.2.0  | ^1.1.0 <1.3.0 |
+| 0.4.x                    | ^1.9.0  | ^1.3.0        |
+| 0.3.x                    | ^1.9.0  | ^1.1.0 <1.3.0 |
 
 ## Usage
 
