@@ -202,7 +202,7 @@ class ProductionModePlugin {
         const globalizeModuleIdsMap = {};
 
         compilation.chunks.forEach((chunk) => {
-          chunk.modules.forEach((module) => {
+          chunk.forEachModule((module) => {
             let aux;
             const request = module.request;
             if (request && util.isGlobalizeRuntimeModule(request)) {
@@ -241,9 +241,9 @@ class ProductionModePlugin {
             //   - the true entry module should be globalize-compiled-data
             //     module, which has been created as a NormalModule
             chunk.removeModule(chunk.entryModule);
-            chunk.entryModule = chunk.modules.find((module) => module.context.endsWith(".tmp-globalize-webpack"));
+            chunk.entryModule = chunk.getModules().find((module) => module.context.endsWith(".tmp-globalize-webpack"));
 
-            const newModules = chunk.modules.map((module) => {
+            const newModules = chunk.mapModules((module) => {
               let fnContent;
               if (module === chunk.entryModule) {
                 // rewrite entry module to contain the globalize-compiled-data
@@ -273,11 +273,10 @@ class ProductionModePlugin {
             // remove old modules with modified clones
             // chunk.removeModule doesn't always find the module to remove
             // ¯\_(ツ)_/¯, so we have to be be a bit more thorough here.
-            chunk.modules.forEach((module) => module.removeChunk(chunk));
-            chunk.modules = [];
+            chunk.forEachModule((module) => module.removeChunk(chunk));
 
             // install the rewritten modules
-            newModules.forEach((module) => chunk.addModule(module));
+            chunk.setModules(newModules);
           });
       });
 
@@ -296,7 +295,7 @@ class ProductionModePlugin {
         }
         function chunkScore(chunk) {
           if (!cachedChunkScore[chunk.name]) {
-            cachedChunkScore[chunk.name] = chunk.modules.reduce((sum, module) => {
+            cachedChunkScore[chunk.name] = chunk.getModules().reduce((sum, module) => {
               return Math.max(sum, moduleScore(module));
             }, -1);
           }
