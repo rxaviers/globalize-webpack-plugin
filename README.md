@@ -49,7 +49,7 @@ new globalizePlugin({
 	timeZoneData: function() {}, // time zone data (optional)
 	output: "globalize-compiled-data-[locale].[hash].js", // build output.
 	moduleFilter: filterFunction, // filter for modules to exclude from processing
-	tempdirBase: ".", // optional for non create-react-apps
+	tmpdirBase: ".", // optional for non create-react-apps
 })
 ```
 
