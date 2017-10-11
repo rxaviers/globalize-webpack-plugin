@@ -38,7 +38,7 @@
     "cldr-data": ">=25",
     "globalize-compiler": "^1.0.0",
     "iana-tz-data": ">=2017.0.0",
-    "skip-amd-webpack-plugin": "0.1.x"
+    "skip-amd-webpack-plugin": "0.2.x"
   },
   "peerDependencies": {
     "cldr-data": ">=25",
