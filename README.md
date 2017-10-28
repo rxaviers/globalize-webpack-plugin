@@ -41,7 +41,7 @@ Starting from *v2.0.0*, only *webpack 3* is supported. If you need support for *
 
 ```js
 new globalizePlugin({
-	production: true/false // true: production, false: development
+	production: true/false, // true: production, false: development
 	developmentLocale: "en", // locale to be used for development.
 	supportedLocales: [ "en", "es", "zh", ... ], // locales that should be built support for.
 	cldr: function() {}, // CLDR data (optional)
