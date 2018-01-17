@@ -27,7 +27,8 @@ const mkWebpackConfig = (options) => ({
           production: true,
           developmentLocale: "en",
           supportedLocales: supportedLocales,
-          messages: path.join(__dirname, "fixtures/translations/[locale].json"),
+          messages: [path.join(__dirname, "fixtures/translations/[locale].json"),
+            path.join(__dirname, "fixtures/more-translations/[locale].json")],
           output: "[locale].js"
         },
         options.additionalGWPAttributes
@@ -165,6 +166,11 @@ function commonTests(testName, webpackConfig, outputPath) {
     it("should include formatMessage", () => {
       const result = Globalize.formatMessage("like", 0);
       expect(result).to.equal("Be the first to like this");
+    });
+
+    it("should include strings defined in all locale files", function() {
+      const result = Globalize.formatMessage("foo");
+      expect(result).to.equal("bar");
     });
 
     it("should include formatRelativeTime", () => {

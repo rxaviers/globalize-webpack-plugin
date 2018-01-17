@@ -27,6 +27,9 @@ like( 1 );
 like( 2 );
 like( 3 );
 
+// Use Globalize to format a message from a second message file
+Globalize.messageFormatter("foo");
+
 // Use Globalize to format relative time.
 Globalize.formatRelativeTime( -35, "second" );
 
