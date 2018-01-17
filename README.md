@@ -62,7 +62,7 @@ new globalizePlugin({
 
 *cldr* (optional) a *Function* taking one argument: locale, a *String*; returning an *Object* with the CLDR data for the passed locale. Defaults to the entire supplemental data plus the entire main data for the *developmentLocale*. On the development mode, this content is served on runtime. On production mode, this content is used for precompiling the final bundle.
 
-*messages* (optional) tells the plugin where to find messages for a certain locale.
+*messages* (optional) a *String* or *Array of Strings* that tells the plugin where to find messages for a certain locale.
 
 *timeZoneData* (optional) a *Function* that returns an *Object* with IANA time zone data. an *Object* with the IANA time zone data. Defaults to the entire IANA time zone data from [iana-tz-data](https://github.com/rxaviers/iana-tz-data) package. On the development mode, this content is served on runtime. On production mode, this content is used for precompiling the final bundle.
 
