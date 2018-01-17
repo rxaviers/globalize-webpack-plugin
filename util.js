@@ -52,13 +52,19 @@ module.exports = {
     }
   },
 
-  readMessages: (messagesFilepath, locale) => {
-    messagesFilepath = messagesFilepath.replace("[locale]", locale);
-    if (!fs.existsSync(messagesFilepath) || !fs.statSync(messagesFilepath).isFile()) {
-      console.warn("Unable to find messages file: `" + messagesFilepath + "`");
-      return null;
+  readMessages: (messagesFilepaths, locale) => {
+    let messages = {};
+    const filepaths = [].concat(messagesFilepaths);
+
+    for (let path of filepaths) {
+      path = path.replace("[locale]", locale);
+      if (!fs.existsSync(path) || !fs.statSync(path).isFile()) {
+        console.warn("Unable to find messages file: `" + path + "`");
+        return null;
+      }
+      messages[locale] = Object.assign(messages[locale] || {}, JSON.parse(fs.readFileSync(path))[locale]);
     }
-    return JSON.parse(fs.readFileSync(messagesFilepath));
+    return messages;
   },
 
   tmpdir: (base) => {
