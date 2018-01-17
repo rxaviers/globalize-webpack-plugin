@@ -8,7 +8,7 @@ const path = require("path");
 const rimraf = require("rimraf");
 const webpack = require("webpack");
 
-const supportedLocales = ["en"];
+const supportedLocales = ["en", "es"];
 
 const mkOutputPath = (testName, file) => path.join(__dirname, "../_test-output", testName, file || "");
 
