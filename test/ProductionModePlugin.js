@@ -22,12 +22,16 @@ const mkWebpackConfig = (options) => ({
   },
   optimization: {
     splitChunks: {
+      chunks: "all",
       cacheGroups: {
         vendor: {
+          name: "vendor",
           test: /[\\/]node_modules[\\/]/,
           priority: -10
         },
         runtime: {
+          name: "runtime",
+          minChunks: Infinity
         }
       }
     }
