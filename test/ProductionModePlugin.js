@@ -20,6 +20,18 @@ const mkWebpackConfig = (options) => ({
     path: options.outputPath,
     filename: "app.js"
   },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10
+        },
+        runtime: {
+        }
+      }
+    }
+  },
   plugins: [
     new GlobalizePlugin(
       Object.assign(
@@ -33,20 +45,7 @@ const mkWebpackConfig = (options) => ({
         },
         options.additionalGWPAttributes
       )
-    ),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: "vendor",
-      filename: "vendor.js",
-      minChunks: (module) => {
-        const nodeModules = path.resolve(__dirname, "../node_modules");
-        return module.request && module.request.startsWith(nodeModules);
-      }
-    }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: "runtime",
-      filename: "runtime.js",
-      minChunks: Infinity
-    })
+    )
   ].concat(options.additionalPlugins || [])
 });
 
