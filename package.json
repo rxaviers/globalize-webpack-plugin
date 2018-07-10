@@ -14,7 +14,7 @@
     "lint": "eslint *js test"
   },
   "engines": {
-    "node": ">=4.3.0"
+    "node": ">=6"
   },
   "repository": {
     "type": "git",
