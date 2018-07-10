@@ -60,6 +60,8 @@ const promisefiedWebpack = (config) => new Promise((resolve, reject) => {
 });
 
 function commonTests(testName, webpackConfig, outputPath) {
+  let Globalize;
+  let GlobalizeWebpackId;
   let compileStats;
 
   before((done) => {
@@ -68,10 +70,35 @@ function commonTests(testName, webpackConfig, outputPath) {
       promisefiedWebpack(webpackConfig)
         .then((stats) => {
           compileStats = stats;
+
+          global.window = global;
+          // Hack: Expose __webpack_require__.
+          const runtimeFilePath = mkOutputPath(testName, "runtime.js");
+          const runtimeContent = fs.readFileSync(runtimeFilePath).toString();
+          fs.writeFileSync(runtimeFilePath, runtimeContent.replace(/(function __webpack_require__\(moduleId\) {)/, "window.__webpack_require__ = $1"));
+
+          // Hack2: Load compiled Globalize
+          require(mkOutputPath(testName, "runtime"));
+          require(mkOutputPath(testName, "vendor"));
+          require(mkOutputPath(testName, "en"));
+          require(mkOutputPath(testName, "app"));
+
+          const globalizeModuleStats = compileStats.toJson().modules.find((module) => {
+            return module.name === "./node_modules/globalize/dist/globalize-runtime.js";
+          });
+
+          GlobalizeWebpackId = globalizeModuleStats.id;
+          Globalize = global.__webpack_require__(GlobalizeWebpackId);
+
           done();
         })
         .catch(done);
     });
+  });
+
+  after(() => {
+    delete global.window;
+    delete global.webpackJsonp;
   });
 
   it("should extract formatters and parsers from basic code", () => {
@@ -82,34 +109,14 @@ function commonTests(testName, webpackConfig, outputPath) {
     expect(content).to.be.a("string");
   });
 
+  it("should transform app's imports from globalize into globalize-runtime", () => {
+    const appFilePath = mkOutputPath(testName, "app.js");
+    const appContent = fs.readFileSync(appFilePath).toString();
+
+    expect(appContent).to.contain(`const Globalize = __webpack_require__( ${JSON.stringify(GlobalizeWebpackId)} );`);
+  });
+
   describe("The compiled bundle", () => {
-    let Globalize;
-
-    before(() => {
-      global.window = global;
-      // Hack: Expose __webpack_require__.
-      const runtimeFilePath = mkOutputPath(testName, "runtime.js");
-      const runtimeContent = fs.readFileSync(runtimeFilePath).toString();
-      fs.writeFileSync(runtimeFilePath, runtimeContent.replace(/(function __webpack_require__\(moduleId\) {)/, "window.__webpack_require__ = $1"));
-
-      // Hack2: Load compiled Globalize
-      require(mkOutputPath(testName, "runtime"));
-      require(mkOutputPath(testName, "vendor"));
-      require(mkOutputPath(testName, "en"));
-      require(mkOutputPath(testName, "app"));
-
-      const globalizeModuleStats = compileStats.toJson().modules.find((module) => {
-        return module.name === "./~/globalize/dist/globalize-runtime.js";
-      });
-
-      Globalize = global.__webpack_require__(globalizeModuleStats.id);
-    });
-
-    after(() => {
-      delete global.window;
-      delete global.webpackJsonp;
-    });
-
     it("should render locale chunk with correct entry module", () => {
       const enFilePath = mkOutputPath(testName, "en.js");
       const enContent = fs.readFileSync(enFilePath).toString();

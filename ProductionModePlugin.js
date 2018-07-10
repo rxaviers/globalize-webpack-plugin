@@ -60,24 +60,24 @@ class ProductionModePlugin {
         globalizeCompilerHelper.setAst(parser.state.current.request, ast);
       });
 
-      // "Intercepts" all `require("globalize")` by transforming them into a
-      // `require` to our custom precompiled formatters/parsers, which in turn
-      // requires Globalize, set the default locale and then exports the
-      // Globalize object.
+      // Precompile formatters & parsers from modules that `require("globalize")`.
       parser.plugin("call require:commonjs:item", (expr, param) => {
         const request = parser.state.current.request;
         if(param.isString() && param.string === "globalize" && this.moduleFilter(request) &&
           !(globalizeCompilerHelper.isCompiledDataModule(request))) {
 
-          // Extract Globalize formatters and parsers for all the locales. Webpack
-          // allocates distinct moduleIds per locale, enabling multiple locales to
-          // be used at the same time.
+          // (a) Extract Globalize formatters & parsers, then create a custom
+          //     precompiled formatters & parsers module.
+          // (b) Add a dependency to the precompiled module. Note
+          //     `require("globalize")` doesn't get replaced by `require(<custom
+          //     precompiled module>)` because we do NOT `return true` here (as
+          //     intended).
+          //
+          // Why to iterate over all the locales? Webpack allocates distinct
+          // moduleIds per locale, enabling multiple locales to be used at the
+          // same time.
           this.supportedLocales.forEach((locale) => {
-            // Statically extract Globalize formatters and parsers from the request
-            // file only. Then, create a custom precompiled formatters/parsers module
-            // that will be called instead of Globalize, which in turn requires
-            // Globalize, set the default locale and then exports the Globalize
-            // object.
+            /* a */
             const compiledDataFilepath = globalizeCompilerHelper.createCompiledDataModule(request, locale);
 
             // Skip the AMD part of the custom precompiled formatters/parsers UMD
@@ -96,16 +96,12 @@ class ProductionModePlugin {
               util.escapeRegex(compiledDataFilepath)
             ].join("|"));
 
-            // Add localized Globalize formatters and parsers as dependencies
-            // Replace require("globalize") with require(<custom precompiled module of
-            // developmentLocale>).
-            const dep = new CommonJsRequireDependency(compiledDataFilepath, locale == this.developmentLocale ? param.range : null);
+            /* b */
+            const dep = new CommonJsRequireDependency(compiledDataFilepath, null);
             dep.loc = expr.loc;
             dep.optional = !!parser.scope.inTry;
             parser.state.current.addDependency(dep);
           });
-
-          return true;
         }
       });
     };
