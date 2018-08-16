@@ -17,8 +17,21 @@ const mkWebpackConfig = (options) => ({
     app: path.join(__dirname, "fixtures/app")
   },
   output: {
-    path: options.outputPath,
-    filename: "app.js"
+    path: options.outputPath
+  },
+  optimization: {
+    minimize: false,
+    runtimeChunk: "single",
+    splitChunks: {
+      chunks: "all",
+      cacheGroups: {
+        vendors: {
+          name: "vendor",
+          test: /[\\/]node_modules[\\/]/,
+          priority: -10
+        }
+      }
+    }
   },
   plugins: [
     new GlobalizePlugin(
@@ -33,26 +46,26 @@ const mkWebpackConfig = (options) => ({
         },
         options.additionalGWPAttributes
       )
-    ),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: "vendor",
-      filename: "vendor.js",
-      minChunks: (module) => {
-        const nodeModules = path.resolve(__dirname, "../node_modules");
-        return module.request && module.request.startsWith(nodeModules);
-      }
-    }),
-    new webpack.optimize.CommonsChunkPlugin({
-      name: "runtime",
-      filename: "runtime.js",
-      minChunks: Infinity
-    })
+    )
+    // new webpack.optimize.CommonsChunkPlugin({
+    //   name: "vendor",
+    //   filename: "vendor.js",
+    //   minChunks: (module) => {
+    //     const nodeModules = path.resolve(__dirname, "../node_modules");
+    //     return module.request && module.request.startsWith(nodeModules);
+    //   }
+    // }),
+    // new webpack.optimize.CommonsChunkPlugin({
+    //   name: "runtime",
+    //   filename: "runtime.js",
+    //   minChunks: Infinity
+    // })
   ].concat(options.additionalPlugins || [])
 });
 
 const promisefiedWebpack = (config) => new Promise((resolve, reject) => {
   webpack(config, (error, stats) => {
-    if (error) {
+    if (error || stats.hasErrors()) {
       return reject(error);
     }
     return resolve(stats);
