@@ -28,7 +28,8 @@
   "author": "Rafael Xavier de Souza",
   "contributors": [
     "James Bellenger <james@bellenger.org>",
-    "Frédéric Miserey <frederic@none.net>"
+    "Frédéric Miserey <frederic@none.net>",
+    "Ghislain Seguin <gseguin@google.com>"
   ],
   "license": "MIT",
   "bugs": {
