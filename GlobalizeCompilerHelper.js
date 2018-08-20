@@ -18,10 +18,7 @@ class GlobalizeCompilerHelper {
     this.timeZoneData = attributes.timeZoneData;
     this.tmpdir = attributes.tmpdir;
     this.webpackCompiler = attributes.webpackCompiler;
-
-    if (this.webpackCompiler.hooks) {
-      this.webpackCompiler.hooks.globalizeBeforeCompileExtracts = new SyncHook(["locale", "attributes", "request"]);
-    }
+    this.webpackCompiler.hooks.globalizeBeforeCompileExtracts = new SyncHook(["locale", "attributes", "request"]);
   }
 
   setAst(request, ast) {
@@ -67,11 +64,7 @@ class GlobalizeCompilerHelper {
       attributes.messages = this.messages[locale];
     }
 
-    if (this.webpackCompiler.hooks) {
-      this.webpackCompiler.hooks.globalizeBeforeCompileExtracts.call(locale, attributes, request);
-    } else {
-      this.webpackCompiler.applyPlugins("globalize-before-compile-extracts", locale, attributes, request);
-    }
+    this.webpackCompiler.hooks.globalizeBeforeCompileExtracts.call(locale, attributes, request);
 
     try {
       content = globalizeCompiler.compileExtracts(attributes);

@@ -27,8 +27,7 @@
   ],
   "author": "Rafael Xavier de Souza",
   "contributors": [
-    "James Bellenger <james@bellenger.org>",
-    "Ghislain Seguin <gseguin@google.com>"
+    "James Bellenger <james@bellenger.org>"
   ],
   "license": "MIT",
   "bugs": {
@@ -46,7 +45,7 @@
     "cldr-data": ">=25",
     "globalize": "^1.3.0",
     "iana-tz-data": ">=2017.0.0",
-    "webpack": ">=3"
+    "webpack": "^4.0.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
@@ -59,7 +58,7 @@
     "mkdirp": "^0.5.1",
     "mocha": "^3.3.0",
     "rimraf": "^2.6.1",
-    "webpack": "^4.16.5"
+    "webpack": "^4.0.0"
   },
   "cldr-data-urls-filter": "(core|dates|numbers|units)"
 }
