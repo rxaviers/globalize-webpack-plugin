@@ -19,11 +19,14 @@ class GlobalizePlugin {
   }
 
   apply(compiler) {
-    compiler.apply(
-      this.attributes.production ?
-      new ProductionModePlugin(this.attributes) :
-      new DevelopmentModePlugin(this.attributes)
-    );
+    const CurrentModePlugin = this.attributes.production ? ProductionModePlugin : DevelopmentModePlugin;
+    const plugin = new CurrentModePlugin(this.attributes);
+
+    if (compiler.hooks) {
+      plugin.apply(compiler);
+    } else {
+      compiler.apply(plugin);
+    }
   }
 }
 
