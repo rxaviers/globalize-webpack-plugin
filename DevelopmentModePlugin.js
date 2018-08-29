@@ -1,6 +1,7 @@
 "use strict";
 
 const CommonJsRequireDependency = require("webpack/lib/dependencies/CommonJsRequireDependency");
+const RequireHeaderDependency = require("webpack/lib/dependencies/RequireHeaderDependency");
 const fs = require("fs");
 const path = require("path");
 const SkipAMDPlugin = require("skip-amd-webpack-plugin");
@@ -60,10 +61,16 @@ class DevelopmentModePlugin {
           if(param.isString() && param.string === "globalize" && this.moduleFilter(request) &&
             !(new RegExp(util.escapeRegex(this.i18nData))).test(request)) {
 
-            const dep = new CommonJsRequireDependency(this.i18nData, param.range);
-            dep.loc = expr.loc;
-            dep.optional = !!parser.scope.inTry;
-            parser.state.current.addDependency(dep);
+            // Replace "globalize" with the dev bundle
+            const dep1 = new CommonJsRequireDependency(this.i18nData, param.range);
+            dep1.loc = expr.loc;
+            dep1.optional = !!parser.scope.inTry;
+            parser.state.current.addDependency(dep1);
+
+            // Replace 'require' by '__webpack_require__'
+            const dep2 = new RequireHeaderDependency(expr.callee.range);
+            dep2.loc = expr.loc;
+            parser.state.current.addDependency(dep2);
 
             return true;
           }
