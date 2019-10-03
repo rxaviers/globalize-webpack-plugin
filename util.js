@@ -1,11 +1,7 @@
 "use strict";
 
-const cldrData = require("cldr-data");
 const fs = require("fs");
-const ianaTzData = require("iana-tz-data");
 const path = require("path");
-
-const mainFiles = ["ca-gregorian", "currencies", "dateFields", "numbers", "timeZoneNames", "units"];
 
 const isGlobalizeModule = (filepath) => {
   filepath = filepath.split( /[\/\\]/ );
@@ -17,16 +13,6 @@ const isGlobalizeModule = (filepath) => {
 };
 
 module.exports = {
-  cldr: (locale) => {
-    return cldrData.entireSupplemental().concat(mainFiles.map((mainFile) => {
-      return cldrData(path.join("main", locale, mainFile));
-    }));
-  },
-
-  timeZoneData: () => {
-    return ianaTzData;
-  },
-
   isGlobalizeModule: isGlobalizeModule,
 
   isGlobalizeRuntimeModule: (filepath) => {

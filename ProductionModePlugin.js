@@ -16,7 +16,7 @@ const util = require("./util");
  */
 class ProductionModePlugin {
   constructor(attributes) {
-    this.cldr = attributes.cldr || util.cldr;
+    this.cldr = attributes.cldr;
     this.developmentLocale = attributes.developmentLocale;
     this.messages = attributes.messages && attributes.supportedLocales.reduce((sum, locale) => {
       sum[locale] = util.readMessages(attributes.messages, locale) || {};
@@ -25,9 +25,10 @@ class ProductionModePlugin {
     this.moduleFilter = util.moduleFilterFn(attributes.moduleFilter);
     this.supportedLocales = attributes.supportedLocales;
     this.output = attributes.output;
-    this.timeZoneData = attributes.timeZoneData || util.timeZoneData;
+    this.timeZoneData = attributes.timeZoneData;
     const tmpdirBase = attributes.tmpdirBase || ".";
     this.tmpdir = util.tmpdir(tmpdirBase);
+    this.getAst = attributes.getAst;
   }
 
   apply(compiler) {
@@ -56,7 +57,7 @@ class ProductionModePlugin {
     const bindParser = (parser) => {
       // Map each AST and its request filepath.
       parser.hooks.program.tap("GlobalizePlugin", (ast) => {
-        globalizeCompilerHelper.setAst(parser.state.current.request, ast);
+        globalizeCompilerHelper.setAst(parser.state.current.request, this.getAst(ast));
       });
 
       // Precompile formatters & parsers from modules that `require("globalize")`.
