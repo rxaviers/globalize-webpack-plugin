@@ -44,7 +44,7 @@ declare namespace GlobalizePlugin {
     messages?: string | string[];
     timeZoneData?: TimeZoneDataFunction;
     output?: string;
-    moduleFilter: ModuleFilterFunction;
+    moduleFilter?: ModuleFilterFunction;
     tmpdirBase?: string
   }
 }
