@@ -1,7 +1,3 @@
-// Type definitions for globalize-webpack-plugin 3.0.0
-// Project: globalize-webpack-plugin
-// Definitions by: Dustin Steiner <dustin.steiner@gmail.com>
-
 export = GlobalizePlugin;
 
 declare class GlobalizePlugin {
