@@ -5,9 +5,9 @@
 export = GlobalizePlugin;
 
 declare class GlobalizePlugin {
-  constructor(attributes: GlobalizePluginAttributes);
+  constructor(attributes: GlobalizePlugin.GlobalizePluginAttributes);
   
-  apply(compiler: ): void;
+  apply(compiler: any): void;
 }
 
 declare namespace GlobalizePlugin {
@@ -36,7 +36,7 @@ declare namespace GlobalizePlugin {
   
   type ModuleFilterFunction = (path: string) => boolean;
 
-  interface GlobalizePluginAttributes {
+  export interface GlobalizePluginAttributes {
     production: boolean;
     developmentLocale: string;
     supportedLocales: string[];
