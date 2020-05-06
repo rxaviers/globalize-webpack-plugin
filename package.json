@@ -3,9 +3,11 @@
   "version": "3.0.0",
   "description": "Globalize.js webpack plugin",
   "main": "index.js",
+  "types": "index.d.ts",
   "files": [
     "*.js",
-    "DCO.md"
+    "DCO.md",
+    "index.d.ts"
   ],
   "scripts": {
     "test": "mocha test",
